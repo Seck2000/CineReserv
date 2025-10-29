@@ -1,0 +1,111 @@
+@model CineReserv.Models.Film
+
+@{
+    ViewData["Title"] = Model.Titre;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <img src="@Model.ImageUrl" class="img-fluid rounded shadow" alt="@Model.Titre">
+        </div>
+        <div class="col-md-8">
+            <h1>@Model.Titre</h1>
+            <div class="mb-3">
+                <span class="badge bg-primary me-2">@Model.Genre</span>
+                <span class="badge bg-secondary me-2">@Model.Classification</span>
+                <span class="badge bg-info me-2">@Model.Duree min</span>
+            </div>
+            <p class="lead">@Model.Description</p>
+            
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5>📅 Informations</h5>
+                    <p><strong>Date de sortie :</strong> @Model.DateSortie.ToString("dd MMMM yyyy")</p>
+                    <p><strong>Durée :</strong> @Model.Duree minutes</p>
+                    <p><strong>Classification :</strong> @Model.Classification</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>💰 Tarifs</h5>
+                    <p class="text-muted">Les prix varient selon la catégorie d'âge choisie lors de la réservation.</p>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.BandeAnnonceUrl))
+            {
+                <div class="mb-4">
+                    <h5>🎬 Bande-annonce</h5>
+                    <div class="ratio ratio-16x9">
+                        <iframe src="@Model.BandeAnnonceUrl" allowfullscreen></iframe>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <hr class="my-5">
+
+    <div class="row">
+        <div class="col-12">
+            <h2>🎫 Séances disponibles</h2>
+            
+            @if (Model.Seances != null && Model.Seances.Any(s => s.DateHeure > DateTime.Now && s.EstActive))
+            {
+                var seancesGroupes = Model.Seances
+                    .Where(s => s.DateHeure > DateTime.Now && s.EstActive)
+                    .GroupBy(s => s.DateHeure.ToString("HH:mm"))
+                    .OrderBy(g => g.Key);
+                
+                @foreach (var groupe in seancesGroupes)
+                {
+                    <div class="mb-4">
+                        <h4 class="text-primary mb-3">🕐 @groupe.Key</h4>
+                        <div class="row">
+                            @foreach (var seance in groupe.OrderBy(s => s.Salle.Nom))
+                            {
+                                <div class="col-md-6 col-lg-4 mb-3">
+                                    <div class="card h-100 shadow-sm">
+                                        <div class="card-body d-flex flex-column">
+                                            <h5 class="card-title">@seance.Salle.Nom</h5>
+                                            <p class="card-text">
+                                                <strong>Date :</strong> @seance.DateHeure.ToString("dd/MM/yyyy")<br>
+                                                <strong>Places :</strong> @seance.Salle.NombrePlaces disponibles
+                                            </p>
+                                            <div class="mt-auto">
+                                                @if (ViewBag.IsSupplier == true)
+                                                {
+                                                    <div class="alert alert-info text-center mb-0">
+                                                        <i class="fas fa-info-circle"></i> Mode gestion
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <a asp-action="SelectionBillets" asp-route-seanceId="@seance.Id" class="btn btn-primary w-100">
+                                                        <i class="fas fa-ticket-alt"></i> Choisir cette séance
+                                                    </a>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <h4>Aucune séance disponible</h4>
+                    <p>Il n'y a actuellement aucune séance programmée pour ce film.</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Retour à la liste
+        </a>
+    </div>
+</div>

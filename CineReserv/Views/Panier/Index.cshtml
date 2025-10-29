@@ -1,0 +1,138 @@
+@model IEnumerable<CineReserv.Models.PanierItem>
+
+@{
+    ViewData["Title"] = "Mon Panier";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">🛒 Mon Panier</h1>
+            
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert" id="successAlert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                
+                @if (TempData["ShowSuccessAlert"] != null)
+                {
+                    <script>
+                        // Afficher l'alerte de succès temporairement
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const alert = document.getElementById('successAlert');
+                            if (alert) {
+                                // Auto-dismiss après 3 secondes
+                                setTimeout(function() {
+                                    const bsAlert = new bootstrap.Alert(alert);
+                                    bsAlert.close();
+                                }, 3000);
+                            }
+                        });
+                    </script>
+                }
+            }
+
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <h3>Votre panier est vide</h3>
+                    <p class="text-muted">Ajoutez des films à votre panier pour commencer vos réservations</p>
+                    <a asp-controller="Films" asp-action="Index" class="btn btn-primary">
+                        <i class="fas fa-film"></i> Voir les films
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="row">
+                    <div class="col-md-8">
+                        @foreach (var item in Model)
+                        {
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <img src="@item.Seance.Film.ImageUrl" class="img-fluid rounded" alt="@item.Seance.Film.Titre">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h5>@item.Seance.Film.Titre</h5>
+                                            <p class="text-muted">
+                                                <strong>Salle :</strong> @item.Seance.Salle.Nom<br>
+                                                <strong>Date :</strong> @item.Seance.DateHeure.ToString("dddd dd MMMM yyyy")<br>
+                                                <strong>Heure :</strong> @item.Seance.DateHeure.ToString("HH:mm")<br>
+                                                <strong>Prix unitaire :</strong> @item.PrixUnitaire.ToString("C")
+                                            </p>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <label class="form-label me-2">Places :</label>
+                                                <form method="post" asp-action="Modifier" class="d-flex">
+                                                    <input type="hidden" name="id" value="@item.Id" />
+                                                    <input type="number" name="nombrePlaces" value="@item.NombrePlaces" 
+                                                           min="1" max="10" class="form-control me-2" style="width: 80px;" />
+                                                    <button type="submit" class="btn btn-outline-primary btn-sm">
+                                                        <i class="fas fa-sync"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                            <div class="mb-2">
+                                                <strong>Total : @item.PrixTotal.ToString("C")</strong>
+                                            </div>
+                                            <form method="post" asp-action="Supprimer" class="d-inline">
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                    <i class="fas fa-trash"></i> Supprimer
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Récapitulatif</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Nombre d'articles :</span>
+                                    <strong>@Model.Count()</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Total des places :</span>
+                                    <strong>@Model.Sum(i => i.NombrePlaces)</strong>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between mb-3">
+                                    <span><strong>Total à payer :</strong></span>
+                                    <strong class="h5 text-primary">@Model.Sum(i => i.PrixTotal).ToString("C")</strong>
+                                </div>
+                                
+                                <div class="d-grid gap-2">
+                                    <a asp-controller="Payment" asp-action="Index" class="btn btn-success btn-lg">
+                                        <i class="fas fa-credit-card"></i> Procéder au paiement
+                                    </a>
+                                    <form method="post" asp-action="Vider" class="d-inline">
+                                        <button type="submit" class="btn btn-outline-danger w-100" 
+                                                onclick="return confirm('Êtes-vous sûr de vouloir vider votre panier ?')">
+                                            <i class="fas fa-trash"></i> Vider le panier
+                                        </button>
+                                    </form>
+                                    <a asp-controller="Films" asp-action="Index" class="btn btn-outline-primary">
+                                        <i class="fas fa-plus"></i> Continuer mes réservations
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

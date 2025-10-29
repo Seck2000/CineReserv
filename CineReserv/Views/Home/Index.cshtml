@@ -1,0 +1,239 @@
+﻿@{
+    ViewData["Title"] = "CineReserv - Réservation de cinéma en ligne";
+    var tousLesFilms = ViewBag.TousLesFilms as List<CineReserv.Models.Film>;
+    var genres = ViewBag.Genres as List<string>;
+}
+
+<div class="hero-section bg-primary text-white py-5 mb-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold">🎬 CineReserv</h1>
+                <p class="lead">Réservez vos places de cinéma en ligne facilement et rapidement</p>
+                <a asp-controller="Films" asp-action="Index" class="btn btn-light btn-lg">
+                    <i class="fas fa-film"></i> Voir les films à l'affiche
+                </a>
+            </div>
+            <div class="col-lg-6 text-center">
+                <i class="fas fa-ticket-alt" style="font-size: 8rem; opacity: 0.3;"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Message informatif -->
+    @if (TempData["InfoMessage"] != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            @TempData["InfoMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Barre de recherche -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h6 class="mb-2">🔍 Rechercher un film</h6>
+            <div class="d-flex">
+                <input type="text" id="liveSearch" class="form-control form-control-sm me-2" placeholder="Tapez le titre, genre ou description du film..." style="height: 32px;">
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearSearch()" style="height: 32px;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tous les films -->
+           @if (tousLesFilms != null && tousLesFilms.Any())
+           {
+               <div class="row mb-5">
+                   <div class="col-12">
+                       <h2 class="mb-4">🎬 Tous nos films</h2>
+                <div class="row" id="filmsContainer">
+                    @foreach (var film in tousLesFilms)
+                    {
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100 shadow-sm film-card">
+                                <div class="position-relative">
+                                    <img src="@film.ImageUrl" class="card-img-top" alt="@film.Titre" 
+                                         style="height: 300px; object-fit: cover;">
+                                    <div class="position-absolute top-0 end-0 m-2">
+                                        <span class="badge bg-primary">@film.Genre</span>
+                                    </div>
+                                </div>
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">@film.Titre</h5>
+                                    <p class="card-text text-muted">
+                                        <i class="fas fa-clock"></i> @film.Duree min • 
+                                        <i class="fas fa-calendar"></i> @film.DateSortie.ToString("dd/MM/yyyy") •
+                                        <i class="fas fa-certificate"></i> @film.Classification
+                                    </p>
+                                    <p class="card-text">@(film.Description.Length > 100 ? film.Description.Substring(0, 100) + "..." : film.Description)</p>
+                                            <div class="mt-auto">
+                                                <div class="d-flex justify-content-end">
+                                                    <a asp-controller="Films" asp-action="Details" asp-route-id="@film.Id"
+                                                       class="btn btn-outline-primary">
+                                                       <i class="fas fa-eye"></i> Voir détails
+                                                   </a>
+                                               </div>
+                                           </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="text-center mt-4">
+                    <a asp-controller="Films" asp-action="Index" class="btn btn-primary btn-lg">
+                        <i class="fas fa-filter"></i> Filtrer et rechercher
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-12 text-center py-5">
+                <h3>Aucun film disponible</h3>
+                <p class="text-muted">Les films seront bientôt disponibles !</p>
+                <a asp-controller="Films" asp-action="SeedData" class="btn btn-primary">
+                    <i class="fas fa-database"></i> Peupler la base de données
+                </a>
+            </div>
+        </div>
+    }
+
+    <!-- Fonctionnalités -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="mb-4">✨ Pourquoi choisir CineReserv ?</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <i class="fas fa-ticket-alt fa-3x text-primary mb-3"></i>
+                            <h5>Réservation facile</h5>
+                            <p class="text-muted">Réservez vos places en quelques clics</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <i class="fas fa-search fa-3x text-primary mb-3"></i>
+                            <h5>Recherche avancée</h5>
+                            <p class="text-muted">Trouvez facilement le film de votre choix</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+                            <h5>Paiement sécurisé</h5>
+                            <p class="text-muted">Vos données sont protégées</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .film-card {
+        transition: transform 0.3s ease;
+    }
+
+    .film-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+</style>
+
+<script>
+    // Attendre que le DOM soit complètement chargé
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Script de recherche chargé');
+        
+        // Recherche en temps réel
+        const searchInput = document.getElementById('liveSearch');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                console.log('Recherche déclenchée:', this.value);
+                var searchTerm = this.value.toLowerCase().trim();
+                
+                // Filtrer les cartes de films
+                const filmCards = document.querySelectorAll('.film-card');
+                let visibleCount = 0;
+                
+                filmCards.forEach(function(card) {
+                    const container = card.closest('.col-md-6, .col-lg-4');
+                    if (!container) return;
+                    
+                    const title = card.querySelector('.card-title')?.textContent?.toLowerCase() || '';
+                    const description = card.querySelector('.card-text')?.textContent?.toLowerCase() || '';
+                    const genre = card.querySelector('.badge')?.textContent?.toLowerCase() || '';
+                    
+                    // Recherche dans titre, description et genre
+                    const matches = title.includes(searchTerm) || 
+                                   description.includes(searchTerm) || 
+                                   genre.includes(searchTerm);
+                    
+                    if (matches || searchTerm === '') {
+                        container.style.display = '';
+                        visibleCount++;
+                    } else {
+                        container.style.display = 'none';
+                    }
+                });
+                
+                // Gestion du message "Aucun résultat"
+                if (searchTerm.length > 0 && visibleCount === 0 && filmCards.length > 0) {
+                    showNoResults();
+                } else {
+                    hideNoResults();
+                }
+            });
+        }
+    });
+    
+    function clearSearch() {
+        const searchInput = document.getElementById('liveSearch');
+        if (searchInput) {
+            searchInput.value = '';
+        }
+        
+        // Afficher tous les films
+        const containers = document.querySelectorAll('.col-md-6, .col-lg-4');
+        containers.forEach(function(container) {
+            container.style.display = '';
+        });
+        
+        hideNoResults();
+    }
+    
+    function showNoResults() {
+        if (document.getElementById('noResultsMessage')) return;
+        
+        const container = document.getElementById('filmsContainer') || document.querySelector('.row');
+        if (container) {
+            const noResultsDiv = document.createElement('div');
+            noResultsDiv.id = 'noResultsMessage';
+            noResultsDiv.className = 'col-12 text-center py-5';
+            noResultsDiv.innerHTML = '<h3>Aucun film trouvé</h3><p class="text-muted">Essayez avec d\'autres mots-clés</p>';
+            container.parentNode.insertBefore(noResultsDiv, container.nextSibling);
+        }
+    }
+    
+    function hideNoResults() {
+        const noResults = document.getElementById('noResultsMessage');
+        if (noResults) {
+            noResults.remove();
+        }
+    }
+</script>

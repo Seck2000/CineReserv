@@ -1,0 +1,48 @@
+@model CineReserv.Models.Film
+
+@{
+    ViewData["Title"] = "Supprimer le Film";
+}
+
+<div class="container mt-4">
+    <h1 class="text-danger">⚠️ Supprimer le Film</h1>
+
+    <div class="alert alert-warning">
+        <h4>Attention !</h4>
+        <p>Êtes-vous sûr de vouloir supprimer ce film ? Cette action désactivera le film et toutes ses séances associées.</p>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <img src="@Model.ImageUrl" class="card-img-top" alt="@Model.Titre" style="height: 300px; object-fit: cover;">
+                <div class="card-body">
+                    <h5 class="card-title">@Model.Titre</h5>
+                    <p class="card-text">
+                        <span class="badge bg-primary me-2">@Model.Genre</span>
+                        <span class="badge bg-secondary me-2">@Model.Classification</span>
+                        <span class="badge bg-info">@Model.Duree min</span>
+                    </p>
+                    <p class="card-text">@Model.Description</p>
+                    <p class="card-text">
+                        <small class="text-muted">Date de sortie : @Model.DateSortie.ToString("dd/MM/yyyy")</small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form asp-action="DeleteFilm" method="post" class="mt-4">
+        <input type="hidden" asp-for="Id" />
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Oui, supprimer définitivement
+            </button>
+            <a asp-action="Films" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Annuler
+            </a>
+        </div>
+    </form>
+</div>
+
+

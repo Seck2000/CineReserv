@@ -1,0 +1,207 @@
+@model CineReserv.Controllers.DashboardStats
+
+@{
+    ViewData["Title"] = "Tableau de bord";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">📊 Tableau de bord Fournisseur</h1>
+            
+            <!-- Statistiques principales -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>@Model.TotalRevenus.ToString("C")</h4>
+                                    <p class="mb-0">Revenus totaux</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-euro-sign fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>@Model.TotalPlacesVendues</h4>
+                                    <p class="mb-0">Places vendues</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-ticket-alt fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>@Model.TauxRemplissage.ToString("F1")%</h4>
+                                    <p class="mb-0">Taux de remplissage</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-chart-pie fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>@Model.ClientsActifs</h4>
+                                    <p class="mb-0">Clients actifs</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-users fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informations supplémentaires -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>📈 Aperçu de l'activité</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-6">
+                                    <p><strong>Films en gestion :</strong> @Model.NombreFilms</p>
+                                    <p><strong>Séances programmées :</strong> @Model.NombreSeances</p>
+                                </div>
+                                <div class="col-6">
+                                    <p><strong>Revenus moyens par film :</strong> 
+                                        @(Model.NombreFilms > 0 ? (Model.TotalRevenus / Model.NombreFilms).ToString("C") : "$0.00")
+                                    </p>
+                                    <p><strong>Places moyennes par séance :</strong> 
+                                        @(Model.NombreSeances > 0 ? (Model.TotalPlacesVendues / Model.NombreSeances).ToString("F1") : "0")
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>🎯 Performance</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Taux de remplissage</label>
+                                <div class="progress">
+                                    <div class="progress-bar" role="progressbar" 
+                                         style="width: @Model.TauxRemplissage%" 
+                                         aria-valuenow="@Model.TauxRemplissage" 
+                                         aria-valuemin="0" aria-valuemax="100">
+                                        @Model.TauxRemplissage.ToString("F1")%
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            @if (Model.TauxRemplissage >= 80)
+                            {
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle"></i> Excellent taux de remplissage !
+                                </div>
+                            }
+                            else if (Model.TauxRemplissage >= 50)
+                            {
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i> Taux de remplissage correct
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-exclamation-circle"></i> Taux de remplissage faible
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Réservations récentes -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>📋 Réservations récentes (30 derniers jours)</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.ReservationsRecent.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Film</th>
+                                                <th>Client</th>
+                                                <th>Date séance</th>
+                                                <th>Places</th>
+                                                <th>Prix total</th>
+                                                <th>Date réservation</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var reservation in Model.ReservationsRecent)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <strong>@reservation.Seance.Film.Titre</strong>
+                                                        <br>
+                                                        <small class="text-muted">@reservation.Seance.Salle.Nom</small>
+                                                    </td>
+                                                    <td>@reservation.User.Prenom @reservation.User.Nom</td>
+                                                    <td>@reservation.Seance.DateHeure.ToString("dd/MM/yyyy HH:mm")</td>
+                                                    <td>
+                                                        <span class="badge bg-primary">@reservation.NombrePlaces</span>
+                                                    </td>
+                                                    <td>
+                                                        <strong class="text-success">@reservation.PrixTotal.ToString("C")</strong>
+                                                    </td>
+                                                    <td>@reservation.DateReservation.ToString("dd/MM/yyyy")</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-4">
+                                    <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                                    <h5>Aucune réservation récente</h5>
+                                    <p class="text-muted">Les réservations des 30 derniers jours apparaîtront ici.</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

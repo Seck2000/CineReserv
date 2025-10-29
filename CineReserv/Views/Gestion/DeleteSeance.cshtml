@@ -1,0 +1,53 @@
+@model CineReserv.Models.Seance
+
+@{
+    ViewData["Title"] = "Supprimer la Séance";
+}
+
+<div class="container mt-4">
+    <h1 class="text-danger">⚠️ Supprimer la Séance</h1>
+
+    <div class="alert alert-warning">
+        <h4>Attention !</h4>
+        <p>Êtes-vous sûr de vouloir supprimer cette séance ? Cette action désactivera la séance et toutes les réservations associées seront annulées.</p>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">@Model.Film.Titre</h5>
+                    <p class="card-text">
+                        <strong>📅 Date :</strong> @Model.DateHeure.ToString("dd/MM/yyyy HH:mm")<br>
+                        <strong>🏢 Salle :</strong> @Model.Salle.Nom<br>
+                        <strong>🪑 Places :</strong> @Model.Salle.NombrePlaces<br>
+                        <strong>🎬 Genre :</strong> @Model.Film.Genre<br>
+                        <strong>📊 Statut :</strong> 
+                        @if (Model.EstActive)
+                        {
+                            <span class="badge bg-success">Active</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">Inactive</span>
+                        }
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form asp-action="DeleteSeance" method="post" class="mt-4">
+        <input type="hidden" asp-for="Id" />
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Oui, supprimer définitivement
+            </button>
+            <a asp-action="Seances" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Annuler
+            </a>
+        </div>
+    </form>
+</div>
+
+

@@ -1,0 +1,195 @@
+@{
+    ViewData["Title"] = "Sélection de billets";
+    var seance = ViewBag.Seance as CineReserv.Models.Seance;
+    var categoriesAge = ViewBag.CategoriesAge as List<CineReserv.Models.CategorieAge>;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Informations du film et séance -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <img src="@seance.Film.ImageUrl" class="img-fluid rounded" alt="@seance.Film.Titre" style="height: 200px; object-fit: cover;">
+                        </div>
+                        <div class="col-md-9">
+                            <h2>@seance.Film.Titre</h2>
+                            <div class="mb-2">
+                                <span class="badge bg-primary me-2">@seance.Film.Genre</span>
+                                <span class="badge bg-secondary me-2">@seance.Film.Classification</span>
+                                <span class="badge bg-info me-2">@seance.Film.Duree min</span>
+                            </div>
+                            <p class="text-muted mb-3">@seance.Film.Description</p>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5>📅 Séance</h5>
+                                    <p><strong>Date :</strong> @seance.DateHeure.ToString("dddd dd MMMM yyyy")</p>
+                                    <p><strong>Heure :</strong> @seance.DateHeure.ToString("HH:mm")</p>
+                                    <p><strong>Salle :</strong> @seance.Salle.Nom</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5>🎫 Places disponibles</h5>
+                                    <p><strong>Capacité :</strong> @seance.Salle.NombrePlaces places</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sélection des billets -->
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">🎫 Billets</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="ConfirmerReservation" asp-controller="Films" method="post" id="billetForm">
+                        <input type="hidden" name="seanceId" value="@seance.Id" />
+                        @foreach (var categorie in categoriesAge)
+                        {
+                            <div class="row align-items-center mb-3 p-3 border rounded">
+                                <div class="col-md-6">
+                                    <h5 class="mb-1">@categorie.Nom (@categorie.TrancheAge)</h5>
+                                    <p class="text-muted mb-0">@categorie.Description</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="d-flex align-items-center">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="decrementQuantity('@categorie.Id')">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                        <input type="number" id="quantity_@categorie.Id" name="quantities[@categorie.Id]" 
+                                               value="0" min="0" max="10" class="form-control mx-2 text-center" 
+                                               style="width: 60px;" onchange="updateTotal()">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="incrementQuantity('@categorie.Id')">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-end">
+                                    <span class="h5 text-primary" id="price_@categorie.Id">@categorie.Prix.ToString("C")</span>
+                                    <input type="hidden" id="unitPrice_@categorie.Id" value="@categorie.Prix">
+                                </div>
+                            </div>
+                        }
+                        
+                        <!-- Bouton de soumission -->
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg w-100" id="btnContinuer" disabled>
+                                Procéder à <span id="btnTotal">$0.00</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Résumé de la commande -->
+        <div class="col-md-4">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-header">
+                    <h5 class="mb-0">Résumé de la commande</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Billets :</span>
+                            <span id="totalBillets">$0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Frais de service :</span>
+                            <span id="fraisService">$0.00</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <strong>Total :</strong>
+                            <strong id="totalGeneral">$0.00</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i> 
+                            Les frais de service peuvent s'appliquer
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function incrementQuantity(categorieId) {
+        const input = document.getElementById('quantity_' + categorieId);
+        const currentValue = parseInt(input.value);
+        if (currentValue < 10) {
+            input.value = currentValue + 1;
+            updateTotal();
+        }
+    }
+
+    function decrementQuantity(categorieId) {
+        const input = document.getElementById('quantity_' + categorieId);
+        const currentValue = parseInt(input.value);
+        if (currentValue > 0) {
+            input.value = currentValue - 1;
+            updateTotal();
+        }
+    }
+
+    function updateTotal() {
+        let totalBillets = 0;
+        let totalQuantity = 0;
+        
+        // Parcourir tous les inputs de quantité
+        const quantityInputs = document.querySelectorAll('input[name^="quantities"]');
+        quantityInputs.forEach(function(input) {
+            const quantity = parseInt(input.value) || 0;
+            const unitPrice = parseFloat(input.closest('.border').querySelector('input[type="hidden"]').value);
+            totalBillets += quantity * unitPrice;
+            totalQuantity += quantity;
+        });
+
+        const fraisService = totalBillets > 0 ? 1.50 : 0;
+        const totalGeneral = totalBillets + fraisService;
+
+        document.getElementById('totalBillets').textContent = '$' + totalBillets.toFixed(2);
+        document.getElementById('fraisService').textContent = '$' + fraisService.toFixed(2);
+        document.getElementById('totalGeneral').textContent = '$' + totalGeneral.toFixed(2);
+        document.getElementById('btnTotal').textContent = '$' + totalGeneral.toFixed(2);
+
+        const btnContinuer = document.getElementById('btnContinuer');
+        if (totalQuantity > 0) {
+            btnContinuer.disabled = false;
+            btnContinuer.classList.remove('btn-secondary');
+            btnContinuer.classList.add('btn-primary');
+        } else {
+            btnContinuer.disabled = true;
+            btnContinuer.classList.remove('btn-primary');
+            btnContinuer.classList.add('btn-secondary');
+        }
+    }
+
+    // Initialiser le total
+    document.addEventListener('DOMContentLoaded', function() {
+        updateTotal();
+    });
+</script>
+
+<style>
+    .sticky-top {
+        position: sticky;
+        top: 20px;
+    }
+    
+    .border {
+        border: 1px solid #dee2e6 !important;
+    }
+    
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+</style>

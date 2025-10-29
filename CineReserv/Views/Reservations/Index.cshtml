@@ -1,0 +1,92 @@
+@model IEnumerable<CineReserv.Models.Reservation>
+
+@{
+    ViewData["Title"] = "Mes réservations";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">📋 Mes réservations</h1>
+            
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <h3>Aucune réservation</h3>
+                    <p class="text-muted">Vous n'avez pas encore de réservations</p>
+                    <a asp-controller="Films" asp-action="Index" class="btn btn-primary">
+                        <i class="fas fa-film"></i> Voir les films à l'affiche
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="row">
+                    @foreach (var reservation in Model)
+                    {
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <strong>#@reservation.NumeroReservation</strong>
+                                    <span class="badge @(reservation.Statut == "Confirmee" ? "bg-success" : 
+                                                         reservation.Statut == "Annulee" ? "bg-danger" : "bg-warning")">
+                                        @reservation.Statut
+                                    </span>
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">@reservation.Seance.Film.Titre</h5>
+                                    <p class="card-text">
+                                        <strong>Salle :</strong> @reservation.Seance.Salle.Nom<br>
+                                        <strong>Date :</strong> @reservation.Seance.DateHeure.ToString("dd/MM/yyyy")<br>
+                                        <strong>Heure :</strong> @reservation.Seance.DateHeure.ToString("HH:mm")<br>
+                                        <strong>Places :</strong> @reservation.NombrePlaces<br>
+                                        <strong>Prix total :</strong> @reservation.PrixTotal.ToString("C")
+                                    </p>
+                                    <p class="card-text">
+                                        <small class="text-muted">
+                                            Réservé le @reservation.DateReservation.ToString("dd/MM/yyyy à HH:mm")
+                                        </small>
+                                    </p>
+                                </div>
+                                <div class="card-footer">
+                                    <div class="d-flex justify-content-between">
+                                        <a asp-action="Details" asp-route-id="@reservation.Id" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-eye"></i> Détails
+                                        </a>
+                                        @if (reservation.Statut == "Confirmee" && reservation.Seance.DateHeure > DateTime.Now.AddHours(2))
+                                        {
+                                            <form method="post" asp-action="Cancel" class="d-inline">
+                                                <input type="hidden" name="id" value="@reservation.Id" />
+                                                <button type="submit" class="btn btn-outline-danger btn-sm" 
+                                                        onclick="return confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')">
+                                                    <i class="fas fa-times"></i> Annuler
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+

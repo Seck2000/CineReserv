@@ -1,0 +1,67 @@
+@model IEnumerable<CineReserv.Models.Film>
+
+@{
+    ViewData["Title"] = "Films à l'affiche";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">🎬 Films à l'affiche</h1>
+            <p class="text-muted mb-4">Découvrez les films actuellement projetés dans nos salles</p>
+            
+            
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <h3>Aucun film à l'affiche actuellement</h3>
+                    <p class="text-muted">Il n'y a pas de séances programmées pour le moment. Revenez bientôt !</p>
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-primary btn-lg">
+                        <i class="fas fa-home"></i> Retour à l'accueil
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="row" id="filmsContainer">
+                    @foreach (var film in Model)
+                    {
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100 shadow-sm film-card">
+                                <img src="@film.ImageUrl" class="card-img-top" alt="@film.Titre" style="height: 300px; object-fit: cover;">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">@film.Titre</h5>
+                                    <p class="card-text text-muted">@film.Genre • @film.Duree min • @film.Classification</p>
+                                    <p class="card-text">@(film.Description.Length > 100 ? film.Description.Substring(0, 100) + "..." : film.Description)</p>
+                                           <div class="mt-auto">
+                                               <div class="d-flex justify-content-end">
+                                                   <a asp-action="Details" asp-route-id="@film.Id" class="btn btn-outline-primary">
+                                                       Voir les séances
+                                                   </a>
+                                               </div>
+                                           </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

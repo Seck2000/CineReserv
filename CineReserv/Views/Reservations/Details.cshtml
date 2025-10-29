@@ -1,0 +1,88 @@
+@model CineReserv.Models.Reservation
+
+@{
+    ViewData["Title"] = "Détails de la réservation";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">📋 Détails de la réservation</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Informations de la réservation</h5>
+                            <p><strong>Numéro :</strong> @Model.NumeroReservation</p>
+                            <p><strong>Statut :</strong> 
+                                <span class="badge @(Model.Statut == "Confirmee" ? "bg-success" : 
+                                                     Model.Statut == "Annulee" ? "bg-danger" : "bg-warning")">
+                                    @Model.Statut
+                                </span>
+                            </p>
+                            <p><strong>Date de réservation :</strong> @Model.DateReservation.ToString("dd/MM/yyyy à HH:mm")</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Informations client</h5>
+                            <p><strong>Nom :</strong> @Model.NomClient</p>
+                            <p><strong>Email :</strong> @Model.EmailClient</p>
+                            @if (!string.IsNullOrEmpty(Model.TelephoneClient))
+                            {
+                                <p><strong>Téléphone :</strong> @Model.TelephoneClient</p>
+                            }
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <img src="@Model.Seance.Film.ImageUrl" class="img-fluid rounded" alt="@Model.Seance.Film.Titre">
+                        </div>
+                        <div class="col-md-8">
+                            <h4>@Model.Seance.Film.Titre</h4>
+                            <p class="text-muted">@Model.Seance.Film.Genre • @Model.Seance.Film.Duree min</p>
+                            <p><strong>Salle :</strong> @Model.Seance.Salle.Nom</p>
+                            <p><strong>Date et heure :</strong> @Model.Seance.DateHeure.ToString("dddd dd MMMM yyyy à HH:mm")</p>
+                            <p><strong>Nombre de places :</strong> @Model.NombrePlaces</p>
+                            <p><strong>Prix unitaire :</strong> @Model.PrixUnitaire.ToString("C")</p>
+                            <p><strong>Total :</strong> <span class="h5 text-primary">@Model.PrixTotal.ToString("C")</span></p>
+                            
+                            @if (ViewBag.SiegesReserves != null)
+                            {
+                                <div class="mt-3">
+                                    <h6>Sièges réservés :</h6>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        @foreach (var siege in ViewBag.SiegesReserves)
+                                        {
+                                            <span class="badge bg-primary">@siege.NomComplet</span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Retour à mes réservations
+                        </a>
+                        @if (Model.Statut == "Confirmee" && Model.Seance.DateHeure > DateTime.Now.AddHours(2))
+                        {
+                            <form method="post" asp-action="Cancel" class="d-inline">
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <button type="submit" class="btn btn-danger" 
+                                        onclick="return confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')">
+                                    <i class="fas fa-times"></i> Annuler la réservation
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

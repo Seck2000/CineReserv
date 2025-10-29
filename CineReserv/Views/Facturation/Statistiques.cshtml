@@ -1,0 +1,138 @@
+@model dynamic
+
+@{
+    ViewData["Title"] = "Statistiques de Facturation";
+}
+
+<div class="container mt-4">
+    <h1>📊 Statistiques de Facturation</h1>
+
+    <div class="row">
+        <!-- Total Revenus -->
+        <div class="col-md-3 mb-4">
+            <div class="card text-white bg-success h-100 shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Revenus Totaux</h5>
+                            <h2 class="card-text">@Model.TotalRevenus.ToString("C")</h2>
+                        </div>
+                        <i class="fas fa-dollar-sign fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nombre de Factures -->
+        <div class="col-md-3 mb-4">
+            <div class="card text-white bg-info h-100 shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Factures Payées</h5>
+                            <h2 class="card-text">@Model.NombreFactures</h2>
+                        </div>
+                        <i class="fas fa-file-invoice fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenus Ce Mois -->
+        <div class="col-md-3 mb-4">
+            <div class="card text-white bg-warning h-100 shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Ce Mois</h5>
+                            <h2 class="card-text">@Model.RevenusCeMois.ToString("C")</h2>
+                        </div>
+                        <i class="fas fa-calendar-alt fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenus Moyens -->
+        <div class="col-md-3 mb-4">
+            <div class="card text-white bg-primary h-100 shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Moyenne</h5>
+                            <h2 class="card-text">@Model.RevenusMoyens.ToString("C")</h2>
+                        </div>
+                        <i class="fas fa-chart-line fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-light">
+                    <h5>Comparaison Mensuelle</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Ce mois-ci :</strong> @Model.RevenusCeMois.ToString("C")</p>
+                    <p><strong>Mois dernier :</strong> @Model.RevenusCeMoisDernier.ToString("C")</p>
+                    @{
+                        var evolution = Model.RevenusCeMoisDernier > 0 ? ((Model.RevenusCeMois - Model.RevenusCeMoisDernier) / Model.RevenusCeMoisDernier * 100) : 0;
+                    }
+                    <p><strong>Évolution :</strong> 
+                        @if (evolution > 0)
+                        {
+                            <span class="text-success">+@evolution.ToString("F1")%</span>
+                        }
+                        else if (evolution < 0)
+                        {
+                            <span class="text-danger">@evolution.ToString("F1")%</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Stable</span>
+                        }
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-light">
+                    <h5>Factures Récentes</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.FacturesRecent.Any())
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var facture in Model.FacturesRecent)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>#@facture.NumeroFacture</strong><br>
+                                        <small class="text-muted">@facture.DateFacture.ToString("dd/MM/yyyy")</small>
+                                    </div>
+                                    <span class="badge bg-success rounded-pill">@facture.Montant.ToString("C")</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Aucune facture récente.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Retour aux factures
+        </a>
+    </div>
+</div>
+
+

@@ -1,0 +1,295 @@
+@{
+    ViewData["Title"] = "Paiement sécurisé - CineReserv";
+    var panierItems = ViewBag.PanierItems as List<CineReserv.Models.PanierItem>;
+    var totalAmount = ViewBag.TotalAmount as decimal? ?? 0;
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- En-tête -->
+            <div class="text-center mb-5">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Retour
+                    </a>
+                    <div></div> <!-- Espaceur pour centrer le titre -->
+                </div>
+                <h1 class="display-6 fw-bold text-primary">💳 Paiement sécurisé</h1>
+                <p class="lead text-muted">Vos informations de paiement sont protégées par Stripe</p>
+            </div>
+
+            <div class="row">
+                <!-- Résumé de la commande -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-shopping-cart"></i> Résumé de la commande</h5>
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            @if (panierItems != null && panierItems.Any())
+                            {
+                                <div class="flex-grow-1">
+                                    @foreach (var item in panierItems)
+                                    {
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <div>
+                                                <h6 class="mb-1">@item.Seance.Film.Titre</h6>
+                                                <small class="text-muted">
+                                                    @item.Seance.DateHeure.ToString("dd/MM/yyyy HH:mm") - 
+                                                    @item.Seance.Salle.Nom
+                                                </small>
+                                                <br>
+                                                <small class="text-muted">
+                                                    @item.CategorieAge.Nom (@item.Quantite place@(item.Quantite > 1 ? "s" : ""))
+                                                </small>
+                                            </div>
+                                            <span class="fw-bold">@item.PrixTotal.ToString("C")</span>
+                                        </div>
+                                    }
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Total</h5>
+                                    <h5 class="mb-0 text-primary">@totalAmount.ToString("C")</h5>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulaire de paiement -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fas fa-shield-alt"></i> Informations de paiement</h5>
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <!-- Messages d'erreur -->
+                            <div id="error-message" class="alert alert-danger d-none" role="alert">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span id="error-text"></span>
+                            </div>
+
+                            <!-- Messages de succès -->
+                            <div id="success-message" class="alert alert-success d-none" role="alert">
+                                <i class="fas fa-check-circle"></i>
+                                <span id="success-text"></span>
+                            </div>
+
+                            <!-- Formulaire Stripe -->
+                            <form id="payment-form" method="post" action="@Url.Action("Charge", "Payment")" class="d-flex flex-column flex-grow-1">
+                                <!-- Informations de facturation -->
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <label for="billing-name" class="form-label">Nom complet</label>
+                                        <input type="text" id="billing-name" class="form-control" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="billing-email" class="form-label">Email</label>
+                                        <input type="email" id="billing-email" class="form-control" required>
+                                    </div>
+                                </div>
+
+                                <!-- Informations de carte Stripe Elements -->
+                                <div class="mb-4">
+                                    <label class="form-label">Informations de carte</label>
+                                    <div id="card-element" class="form-control p-3" style="height: 60px;">
+                                        <!-- Stripe Elements sera injecté ici -->
+                                    </div>
+                                    <div id="card-errors" class="text-danger mt-2" role="alert"></div>
+                                </div>
+
+                                <!-- Espace flexible pour équilibrer la hauteur -->
+                                <div class="flex-grow-1"></div>
+
+                                <!-- Bouton de paiement -->
+                                <div class="d-grid mb-3">
+                                    <button id="submit-payment" class="btn btn-primary btn-lg" type="submit">
+                                        <span id="button-text">
+                                            <i class="fas fa-lock"></i> Payer @totalAmount.ToString("C")
+                                        </span>
+                                        <span id="spinner" class="spinner-border spinner-border-sm d-none" role="status">
+                                            <span class="visually-hidden">Chargement...</span>
+                                        </span>
+                                    </button>
+                                </div>
+
+                                <!-- Sécurité -->
+                                <div class="text-center">
+                                    <small class="text-muted">
+                                        <i class="fas fa-shield-alt"></i>
+                                        Vos informations de paiement sont sécurisées et cryptées par Stripe
+                                    </small>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts Stripe -->
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    // Variables globales
+    var stripe;
+    var elements;
+    var card;
+
+    // Initialisation au chargement de la page
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            // Récupérer la clé publique Stripe
+            const response = await fetch('/Payment/GetPublishableKey');
+            const { publishableKey } = await response.json();
+
+            // Initialiser Stripe avec la clé publique
+            stripe = Stripe(publishableKey);
+
+            // Créer les éléments Stripe
+            elements = stripe.elements();
+
+            // Créer l'élément de carte
+            card = elements.create('card', {
+                style: {
+                    base: {
+                        fontSize: '16px',
+                        color: '#424770',
+                        '::placeholder': {
+                            color: '#aab7c4',
+                        },
+                    },
+                    invalid: {
+                        color: '#9e2146',
+                    },
+                },
+            });
+
+            // Monter l'élément de carte
+            card.mount('#card-element');
+
+            // Gestion des erreurs de carte
+            card.on('change', function(event) {
+                const displayError = document.getElementById('card-errors');
+                if (event.error) {
+                    displayError.textContent = event.error.message;
+                } else {
+                    displayError.textContent = '';
+                }
+            });
+
+        } catch (error) {
+            console.error('Erreur lors de l\'initialisation:', error);
+            showError('Erreur lors de l\'initialisation du paiement');
+        }
+    });
+
+    // Gestion de la soumission du formulaire
+    var form = document.getElementById('payment-form');
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const submitButton = document.getElementById('submit-payment');
+        const buttonText = document.getElementById('button-text');
+        const spinner = document.getElementById('spinner');
+
+        // Désactiver le bouton et afficher le spinner
+        submitButton.disabled = true;
+        buttonText.classList.add('d-none');
+        spinner.classList.remove('d-none');
+
+        // Générer le token Stripe
+        stripe.createToken(card).then(function(result) {
+            if (result.error) {
+                // Informer l'utilisateur s'il y a eu une erreur
+                var errorElement = document.getElementById('card-errors');
+                errorElement.textContent = result.error.message;
+                
+                // Réactiver le bouton
+                submitButton.disabled = false;
+                buttonText.classList.remove('d-none');
+                spinner.classList.add('d-none');
+            } else {
+                // Envoyer le token au serveur
+                var token = result.token.id;
+                
+                // Créer un champ caché avec le token
+                var hiddenInput = document.createElement('input');
+                hiddenInput.setAttribute('type', 'hidden');
+                hiddenInput.setAttribute('name', 'stripeToken');
+                hiddenInput.setAttribute('value', token);
+                
+                // Ajouter les informations de facturation
+                var billingNameInput = document.createElement('input');
+                billingNameInput.setAttribute('type', 'hidden');
+                billingNameInput.setAttribute('name', 'billingName');
+                billingNameInput.setAttribute('value', document.getElementById('billing-name').value);
+                
+                var billingEmailInput = document.createElement('input');
+                billingEmailInput.setAttribute('type', 'hidden');
+                billingEmailInput.setAttribute('name', 'billingEmail');
+                billingEmailInput.setAttribute('value', document.getElementById('billing-email').value);
+                
+                // Ajouter les champs cachés au formulaire
+                form.appendChild(hiddenInput);
+                form.appendChild(billingNameInput);
+                form.appendChild(billingEmailInput);
+                
+                // Soumettre le formulaire au serveur
+                form.submit();
+            }
+        });
+    });
+
+    // Fonctions utilitaires
+    function showError(message) {
+        const errorDiv = document.getElementById('error-message');
+        const errorText = document.getElementById('error-text');
+        const successDiv = document.getElementById('success-message');
+        
+        errorText.textContent = message;
+        errorDiv.classList.remove('d-none');
+        successDiv.classList.add('d-none');
+    }
+
+    function showSuccess(message) {
+        const successDiv = document.getElementById('success-message');
+        const successText = document.getElementById('success-text');
+        const errorDiv = document.getElementById('error-message');
+        
+        successText.textContent = message;
+        successDiv.classList.remove('d-none');
+        errorDiv.classList.add('d-none');
+    }
+</script>
+
+<style>
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: 1px solid rgba(0, 0, 0, 0.125);
+    }
+
+    .card-header {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    }
+
+    #card-element {
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    #card-element:focus {
+        border-color: #86b7fe;
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+    }
+</style>

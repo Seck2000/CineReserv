@@ -1,0 +1,92 @@
+@model CineReserv.Models.Seance
+
+@{
+    ViewData["Title"] = "Réserver - " + Model.Film.Titre;
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2>🎫 Réservation</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <img src="@Model.Film.ImageUrl" class="img-fluid rounded" alt="@Model.Film.Titre">
+                        </div>
+                        <div class="col-md-8">
+                            <h4>@Model.Film.Titre</h4>
+                            <p><strong>Salle :</strong> @Model.Salle.Nom</p>
+                            <p><strong>Date :</strong> @Model.DateHeure.ToString("dddd dd MMMM yyyy")</p>
+                            <p><strong>Heure :</strong> @Model.DateHeure.ToString("HH:mm")</p>
+                            <p><strong>Prix par place :</strong> @Model.Prix.ToString("C")</p>
+                        </div>
+                    </div>
+
+                    <form asp-action="Reserver" method="post">
+                        <input type="hidden" name="seanceId" value="@Model.Id" />
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="nomClient" class="form-label">Nom complet *</label>
+                                <input type="text" class="form-control" id="nomClient" name="nomClient" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="emailClient" class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="emailClient" name="emailClient" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="telephoneClient" class="form-label">Téléphone</label>
+                                <input type="tel" class="form-control" id="telephoneClient" name="telephoneClient">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="nombrePlaces" class="form-label">Nombre de places *</label>
+                                <select class="form-control" id="nombrePlaces" name="nombrePlaces" required>
+                                    <option value="">Sélectionner...</option>
+                                    @for (int i = 1; i <= Math.Min(10, Model.Salle.NombrePlaces); i++)
+                                    {
+                                        <option value="@i">@i place@(i > 1 ? "s" : "")</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <h5>Récapitulatif</h5>
+                            <p><strong>Prix par place :</strong> @Model.Prix.ToString("C")</p>
+                            <p><strong>Total :</strong> <span id="total" class="h5 text-primary">@Model.Prix.ToString("C")</span></p>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="Details" asp-route-id="@Model.FilmId" class="btn btn-secondary me-md-2">
+                                Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check"></i> Confirmer la réservation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('nombrePlaces').addEventListener('change', function() {
+            const nombrePlaces = parseInt(this.value);
+            const prixParPlace = @Model.Prix;
+            const total = nombrePlaces * prixParPlace;
+            document.getElementById('total').textContent = total.toLocaleString('fr-FR', {
+                style: 'currency',
+                currency: 'EUR'
+            });
+        });
+    </script>
+}

@@ -1,0 +1,89 @@
+@model IEnumerable<CineReserv.Models.PanierItem>
+
+@{
+    ViewData["Title"] = "Paiement";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">💳 Paiement</h1>
+            
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <div class="row">
+                <div class="col-md-8">
+                    <h3>Récapitulatif de votre commande</h3>
+                    @foreach (var item in Model)
+                    {
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <img src="@item.Seance.Film.ImageUrl" class="img-fluid rounded" alt="@item.Seance.Film.Titre">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h5>@item.Seance.Film.Titre</h5>
+                                        <p class="text-muted">
+                                            <strong>Salle :</strong> @item.Seance.Salle.Nom<br>
+                                            <strong>Date :</strong> @item.Seance.DateHeure.ToString("dddd dd MMMM yyyy")<br>
+                                            <strong>Heure :</strong> @item.Seance.DateHeure.ToString("HH:mm")<br>
+                                            <strong>Places :</strong> @item.NombrePlaces<br>
+                                            <strong>Prix unitaire :</strong> @item.PrixUnitaire.ToString("C")
+                                        </p>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-end">
+                                            <strong class="h5">@item.PrixTotal.ToString("C")</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Récapitulatif</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Nombre d'articles :</span>
+                                <strong>@Model.Count()</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Total des places :</span>
+                                <strong>@Model.Sum(i => i.NombrePlaces)</strong>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between mb-3">
+                                <span><strong>Total à payer :</strong></span>
+                                <strong class="h5 text-primary">@Model.Sum(i => i.PrixTotal).ToString("C")</strong>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-success btn-lg" onclick="alert('Paiement simulé avec succès !')">
+                                    <i class="fas fa-credit-card"></i> Confirmer le paiement
+                                </button>
+                                <a asp-action="Index" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left"></i> Retour au panier
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+

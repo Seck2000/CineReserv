@@ -1,0 +1,48 @@
+@{
+    ViewData["Title"] = "Paiement réussi - CineReserv";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card text-center">
+                <div class="card-body">
+                    <div class="mb-4">
+                        <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                    </div>
+                    <h1 class="card-title text-success mb-3">🎉 Paiement réussi !</h1>
+                    <p class="card-text lead mb-4">
+                        Votre paiement a été traité avec succès. Vos réservations ont été confirmées.
+                    </p>
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Prochaines étapes :</strong><br>
+                        • Vous recevrez un email de confirmation<br>
+                        • Vos billets sont disponibles dans vos réservations<br>
+                        • Présentez-vous au cinéma avec votre confirmation
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a asp-controller="Reservations" asp-action="Index" class="btn btn-primary btn-lg">
+                            <i class="fas fa-ticket-alt"></i> Voir mes réservations
+                        </a>
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="fas fa-home"></i> Retour à l'accueil
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        border: none;
+    }
+    
+    .text-success {
+        color: #198754 !important;
+    }
+</style>
+
