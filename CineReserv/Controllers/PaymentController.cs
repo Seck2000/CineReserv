@@ -82,7 +82,7 @@ namespace CineReserv.Controllers
                 var chargeOptions = new ChargeCreateOptions
                 {
                     Amount = amountInCents,
-                    Currency = "eur",
+                    Currency = string.IsNullOrWhiteSpace(_stripeSettings.Currency) ? "usd" : _stripeSettings.Currency.ToLowerInvariant(),
                     Description = $"Réservation CineReserv - {user?.Prenom} {user?.Nom}",
                     Source = stripeToken,
                     ReceiptEmail = user?.Email,
