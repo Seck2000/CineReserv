@@ -35,23 +35,6 @@ namespace CineReserv.Models.ViewModels
         [Display(Name = "Type d'utilisateur")]
         public string TypeUtilisateur { get; set; } = "Client";
 
-        [Required(ErrorMessage = "L'adresse est obligatoire")]
-        [StringLength(200, ErrorMessage = "L'adresse ne peut pas dépasser 200 caractères")]
-        [Display(Name = "Adresse")]
-        public string Adresse { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "Le code postal est obligatoire")]
-        [StringLength(10, ErrorMessage = "Le code postal ne peut pas dépasser 10 caractères")]
-        [Display(Name = "Code postal")]
-        public string CodePostal { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "La ville est obligatoire")]
-        [StringLength(100, ErrorMessage = "La ville ne peut pas dépasser 100 caractères")]
-        [Display(Name = "Ville")]
-        public string Ville { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "La date de naissance est obligatoire")]
-        [Display(Name = "Date de naissance")]
-        public DateTime DateNaissance { get; set; } = DateTime.Now.AddYears(-18);
+        // Champs d'inscription simplifiés: suppression adresse, code postal, ville, date de naissance
     }
 }

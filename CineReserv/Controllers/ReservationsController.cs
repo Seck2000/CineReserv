@@ -74,6 +74,13 @@ namespace CineReserv.Controllers
 
             ViewBag.SiegesReserves = siegesReserves;
 
+            // Chercher une facture liée à cette réservation pour ce client
+            var invoice = await _context.Invoices.FirstOrDefaultAsync(i => i.ReservationId == reservation.Id && i.ClientId == userId);
+            if (invoice != null)
+            {
+                ViewBag.InvoiceId = invoice.Id;
+            }
+
             return View(reservation);
         }
 

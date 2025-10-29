@@ -14,35 +14,33 @@
 }
 else
 {
-    <div class="container-fluid mt-4" style="background-color: #1a1a1a; min-height: 100vh;">
+    <div class="container-fluid mt-0 pt-2" style="background-color: #1a1a1a;">
         <div class="row">
             <!-- Colonne de gauche: Détails du film et plan de salle -->
             <div class="col-md-8">
-                <div class="card mb-4" style="background-color: #2d2d2d; border: none; color: white;">
-                    <div class="card-body">
+                <div class="card mb-0" style="background-color: #2d2d2d; border: none; color: white;">
+                    <div class="card-body p-1">
                         <!-- Détails du film -->
-                        <div class="d-flex align-items-center mb-4">
-                            <img src="@seance.Film.ImageUrl" class="img-fluid rounded me-3" alt="@seance.Film.Titre" style="width: 80px; height: 120px; object-fit: cover;">
+                        <div class="d-flex align-items-center mb-0">
+                            <img src="@seance.Film.ImageUrl" class="img-fluid rounded me-1" alt="@seance.Film.Titre" style="width: 35px; height: 50px; object-fit: cover;">
                             <div>
-                                <h3 class="card-title mb-1 text-white">@seance.Film.Titre</h3>
-                                <p class="text-muted mb-1">
-                                    <span class="badge bg-secondary me-1">@seance.Film.Classification</span>
-                                    <span class="badge bg-info me-1">Français</span>
-                                    <span class="badge bg-primary">REGULAR</span>
+                                <h6 class="card-title mb-0 text-white" style="font-size: 12px;">@seance.Film.Titre</h6>
+                                <p class="text-muted mb-0" style="font-size: 9px;">
+                                    <span class="badge bg-secondary me-1" style="font-size: 8px; padding: 2px 4px;">@seance.Film.Classification</span>
+                                    <span class="badge bg-info me-1" style="font-size: 8px; padding: 2px 4px;">Français</span>
+                                    <span class="badge bg-primary" style="font-size: 8px; padding: 2px 4px;">REGULAR</span>
                                 </p>
-                                <p class="text-muted mb-0">
-                                    <strong>@seance.DateHeure.ToString("dd MMMM yyyy")</strong> à <strong>@seance.DateHeure.ToString("HH:mm")</strong><br>
-                                    <strong>@seance.Salle.Nom</strong><br>
-                                    <small>Capacité : @seance.Salle.NombrePlaces places</small>
+                                <p class="text-muted mb-0" style="font-size: 9px;">
+                                    <strong>@seance.DateHeure.ToString("dd MMM yyyy")</strong> à <strong>@seance.DateHeure.ToString("HH:mm")</strong> | <strong>@seance.Salle.Nom</strong>
                                 </p>
                             </div>
                         </div>
                         
                         <!-- Plan de salle -->
-                        <div class="sieges-container mb-4">
+                        <div class="sieges-container mb-0">
                             <!-- Écran -->
-                            <div class="text-center mb-4">
-                                <div class="bg-secondary text-white py-3 rounded" style="font-size: 18px; font-weight: bold;">
+                            <div class="text-center mb-0" style="padding: 2px 0;">
+                                <div class="bg-secondary text-white rounded" style="font-size: 11px; font-weight: bold; padding: 3px;">
                                     ÉCRAN
                                 </div>
                             </div>
@@ -54,87 +52,120 @@ else
                             
                             @foreach (var groupe in siegesGroupes)
                             {
-                                <div class="row mb-2 align-items-center">
+                                <div class="row mb-0 align-items-center">
                                     <div class="col-1 text-end">
-                                        <strong class="text-white">@groupe.Key</strong>
+                                        <strong class="text-white" style="font-size: 9px;">@groupe.Key</strong>
                                     </div>
                                     <div class="col-10">
-                                        <div class="d-flex justify-content-center gap-1 flex-wrap">
-                                            @foreach (var siege in groupe.OrderBy(s => s.Numero))
+                                        <div class="d-flex justify-content-center gap-0 flex-wrap" style="gap: 0;">
+                                            @{
+                                                var siegesOrdered = groupe.OrderBy(s => s.Numero).ToList();
+                                                var seatGroupSize = seance.Salle.NombrePlaces > 50 ? 6 : 5; // Grouper par 5-6 sièges
+                                            }
+                                            @for (int i = 0; i < siegesOrdered.Count; i++)
                                             {
+                                                var siege = siegesOrdered[i];
                                                 var isPreAttribue = siegesPreAttribues?.Contains(siege.Id) == true;
-                                                var siegeClass = "btn-outline-primary";
+                                                var siegeState = "available";
                                                 
                                                 if (siege.EstOccupe)
                                                 {
-                                                    siegeClass = "btn-danger";
+                                                    siegeState = "occupied";
                                                 }
                                                 else if (siege.EstReserve)
                                                 {
-                                                    siegeClass = "btn-warning";
+                                                    siegeState = "reserved";
                                                 }
                                                 else if (isPreAttribue)
                                                 {
-                                                    siegeClass = "btn-success";
+                                                    siegeState = "pre-selected";
                                                 }
                                                 else if (siege.Type == "Handicape")
                                                 {
-                                                    siegeClass = "btn-outline-info";
+                                                    siegeState = "handicap";
+                                                }
+
+                                                @if (i > 0 && i % seatGroupSize == 0)
+                                                {
+                                                    <!-- Espace pour créer une allée -->
+                                                    <div style="width: 12px; height: 24px; flex-shrink: 0;"></div>
                                                 }
 
                                                 <button type="button" 
-                                                        class="btn btn-sm siege-btn @siegeClass @(isPreAttribue ? "pre-selected" : "")"
+                                                        class="siege-btn siege-@siegeState @(isPreAttribue ? "pre-selected" : "")"
                                                         data-siege-id="@siege.Id"
                                                         data-siege-nom="@siege.NomComplet"
                                                         data-siege-type="@siege.Type"
                                                         data-siege-rang="@siege.Rang"
                                                         data-siege-numero="@siege.Numero"
+                                                        data-siege-state="@siegeState"
                                                         @(siege.EstOccupe ? "disabled" : "")
-                                                        onclick="toggleSiege(@siege.Id, '@siege.NomComplet', '@siege.Type', '@siege.Rang', @siege.Numero)"
-                                                        style="width: 30px; height: 30px; font-size: 10px; margin: 1px;">
-                                                    @siege.Numero
+                                                        onclick="toggleSiege(@siege.Id, '@siege.NomComplet', '@siege.Type', '@siege.Rang', @siege.Numero)">
+                                                    <svg width="24" height="24" viewBox="0 0 42 42" xmlns="http://www.w3.org/2000/svg">
+                                                        <!-- Rectangle arrondi (siège) -->
+                                                        <rect x="2" y="6" width="38" height="34" rx="6" ry="6" class="siege-body" fill="none" stroke-width="1.5"/>
+                                                        <!-- Contour interne en forme de U (dossier et accoudoirs) -->
+                                                        <path d="M 8 12 L 8 24 L 12 28 L 30 28 L 34 24 L 34 12" class="siege-u-shape" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+                                                        <!-- Numéro du siège -->
+                                                        <text x="21" y="29" class="siege-number" text-anchor="middle" font-size="9" font-weight="bold" fill="white">@siege.Numero</text>
+                                                        @if (siege.Type == "Handicape")
+                                                        {
+                                                            <!-- Icône fauteuil roulant pour siège handicapé -->
+                                                            <g class="wheelchair-icon" fill="white">
+                                                                <circle cx="18" cy="22" r="3"/>
+                                                                <path d="M 15 25 L 17 30 L 21 30" stroke="white" stroke-width="1.5" fill="none"/>
+                                                                <rect x="21" y="19" width="8" height="6" rx="1"/>
+                                                                <circle cx="26" cy="29" r="2.5" fill="none" stroke="white" stroke-width="1.5"/>
+                                                            </g>
+                                                        }
+                                                    </svg>
+                                                    <!-- Checkmark overlay pour siège sélectionné -->
+                                                    <svg width="24" height="24" viewBox="0 0 42 42" class="checkmark-overlay" style="position: absolute; top: 0; left: 0; pointer-events: none; display: none;">
+                                                        <circle cx="31" cy="11" r="8" fill="#4A90E2"/>
+                                                        <path d="M 27 11 L 30 14 L 35 9" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                                    </svg>
                                                 </button>
                                             }
                                         </div>
                                     </div>
                                     <div class="col-1 text-start">
-                                        <strong class="text-white">@groupe.Key</strong>
+                                        <strong class="text-white" style="font-size: 9px;">@groupe.Key</strong>
                                     </div>
                                 </div>
                             }
                         </div>
 
                         <!-- Légende -->
-                        <div class="row mb-4">
+                        <div class="row mb-0 mt-0">
                             <div class="col-12">
-                                <h6 class="text-white mb-3">Légende :</h6>
-                                <div class="d-flex flex-wrap gap-3">
+                                <h6 class="text-white mb-0" style="font-size: 9px;">Légende :</h6>
+                                <div class="d-flex flex-wrap" style="gap: 8px;">
                                     <div class="d-flex align-items-center">
-                                        <div class="siege-legend bg-primary me-2" style="width: 20px; height: 20px; border-radius: 3px;"></div>
-                                        <span class="text-white">Disponible</span>
+                                        <div class="siege-legend bg-primary me-1" style="width: 12px; height: 12px; border-radius: 2px;"></div>
+                                        <span class="text-white" style="font-size: 8px;">Disponible</span>
                                     </div>
                                     <div class="d-flex align-items-center">
-                                        <div class="siege-legend bg-success me-2" style="width: 20px; height: 20px; border-radius: 3px;"></div>
-                                        <span class="text-white">Pré-sélectionné</span>
+                                        <div class="siege-legend bg-success me-1" style="width: 12px; height: 12px; border-radius: 3px;"></div>
+                                        <span class="text-white" style="font-size: 8px;">Pré-sélectionné</span>
                                     </div>
                                     <div class="d-flex align-items-center">
-                                        <div class="siege-legend bg-warning me-2" style="width: 20px; height: 20px; border-radius: 3px;"></div>
-                                        <span class="text-white">Sélectionné</span>
+                                        <div class="siege-legend bg-warning me-1" style="width: 12px; height: 12px; border-radius: 3px;"></div>
+                                        <span class="text-white" style="font-size: 8px;">Sélectionné</span>
                                     </div>
                                     <div class="d-flex align-items-center">
-                                        <div class="siege-legend bg-danger me-2" style="width: 20px; height: 20px; border-radius: 3px;"></div>
-                                        <span class="text-white">Occupé</span>
+                                        <div class="siege-legend bg-danger me-1" style="width: 12px; height: 12px; border-radius: 3px;"></div>
+                                        <span class="text-white" style="font-size: 8px;">Occupé</span>
                                     </div>
                                     <div class="d-flex align-items-center">
-                                        <div class="siege-legend bg-info me-2" style="width: 20px; height: 20px; border-radius: 3px;"></div>
-                                        <span class="text-white">Handicapé</span>
+                                        <div class="siege-legend bg-info me-1" style="width: 12px; height: 12px; border-radius: 3px;"></div>
+                                        <span class="text-white" style="font-size: 8px;">Handicapé</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Contrôles de zoom -->
-                        <div class="text-center mb-3">
+                        <div class="text-center mb-0 mt-0" style="padding: 2px 0;">
                             <button type="button" class="btn btn-outline-secondary btn-sm me-2" onclick="zoomOut()">
                                 Zoom -
                             </button>
@@ -200,34 +231,118 @@ else
         }
         
         .siege-btn {
-            width: 30px;
-            height: 30px;
-            font-size: 10px;
-            border-radius: 3px;
-            margin: 1px;
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            margin: 0;
+            border: none;
+            background: transparent;
+            cursor: pointer;
             transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .siege-btn svg {
+            width: 24px;
+            height: 24px;
         }
         
         .siege-btn:hover:not(:disabled) {
-            transform: scale(1.1);
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+            transform: scale(1.15);
+            filter: brightness(1.2);
         }
         
-        .siege-btn.selected {
-            background-color: #0d6efd !important;
-            border-color: #0d6efd !important;
-            color: white !important;
-            box-shadow: 0 0 8px rgba(13, 110, 253, 0.5);
+        .siege-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
         }
         
-        .siege-btn.btn-outline-primary {
-            border-color: #0d6efd;
-            color: #0d6efd;
+        /* Siège disponible - Bleu vif */
+        .siege-available .siege-body {
+            fill: #4A90E2;
+            stroke: #2E5C8A;
         }
         
-        .siege-btn.btn-outline-primary:hover {
-            background-color: #0d6efd;
-            color: white;
+        .siege-available .siege-u-shape {
+            stroke: #1E3A5A;
+        }
+        
+        .siege-available .siege-number {
+            fill: white;
+        }
+        
+        /* Siège sélectionné - Fond blanc avec checkmark bleue */
+        .siege-btn.selected .siege-body {
+            fill: white;
+            stroke: #4A90E2;
+            stroke-width: 2;
+        }
+        
+        .siege-btn.selected .siege-u-shape {
+            stroke: #4A90E2;
+            stroke-width: 2;
+        }
+        
+        .siege-btn.selected .siege-number {
+            fill: white;
+            opacity: 0;
+        }
+        
+        /* Siège pré-sélectionné - Vert */
+        .siege-pre-selected .siege-body {
+            fill: #5CB85C;
+            stroke: #3D8B3D;
+        }
+        
+        .siege-pre-selected .siege-u-shape {
+            stroke: #2D652D;
+        }
+        
+        .siege-pre-selected .siege-number {
+            fill: white;
+        }
+        
+        /* Siège occupé - Rouge/Gris foncé */
+        .siege-occupied .siege-body {
+            fill: #D9534F;
+            stroke: #A94442;
+        }
+        
+        .siege-occupied .siege-u-shape {
+            stroke: #8B3633;
+        }
+        
+        .siege-occupied .siege-number {
+            fill: white;
+        }
+        
+        /* Siège réservé - Orange/Jaune */
+        .siege-reserved .siege-body {
+            fill: #F0AD4E;
+            stroke: #D58512;
+        }
+        
+        .siege-reserved .siege-u-shape {
+            stroke: #B8731A;
+        }
+        
+        .siege-reserved .siege-number {
+            fill: white;
+        }
+        
+        /* Siège handicapé - Bleu avec icône fauteuil roulant */
+        .siege-handicap .siege-body {
+            fill: #4A90E2;
+            stroke: #2E5C8A;
+        }
+        
+        .siege-handicap .siege-u-shape {
+            stroke: #1E3A5A;
+        }
+        
+        .siege-handicap .siege-number {
+            fill: white;
+            opacity: 0;
         }
         
         .siege-legend {
@@ -241,6 +356,7 @@ else
         .sieges-container {
             max-width: 100%;
             overflow-x: auto;
+            transform-origin: center top;
         }
     </style>
 
@@ -267,8 +383,10 @@ else
                 const siegeId = parseInt(seat.dataset.siegeId);
                 siegesSelectionnes.push(siegeId);
                 seat.classList.add('selected');
-                seat.classList.remove('btn-success');
-                seat.classList.add('btn-warning');
+                const checkmark = seat.querySelector('.checkmark-overlay');
+                if (checkmark) {
+                    checkmark.style.display = 'block';
+                }
             });
             
             updateSiegesDisplay();
@@ -277,44 +395,28 @@ else
 
         function toggleSiege(siegeId, siegeNom, siegeType, siegeRang, siegeNumero) {
             const siegeBtn = document.querySelector(`[data-siege-id="${siegeId}"]`);
+            const checkmark = siegeBtn.querySelector('.checkmark-overlay');
             
             if (siegesSelectionnes.includes(siegeId)) {
                 // Désélectionner
                 siegesSelectionnes = siegesSelectionnes.filter(id => id !== siegeId);
-                siegeBtn.classList.remove('selected', 'btn-warning');
-                
-                // Remettre le style original
-                if (siegeBtn.classList.contains('pre-selected')) {
-                    siegeBtn.classList.add('btn-success');
-                } else if (siegeType === 'Handicape') {
-                    siegeBtn.classList.add('btn-outline-info');
-                } else {
-                    siegeBtn.classList.add('btn-outline-primary');
+                siegeBtn.classList.remove('selected');
+                if (checkmark) {
+                    checkmark.style.display = 'none';
                 }
             } else {
                 // Vérifier si on peut sélectionner ce siège
                 if (siegesSelectionnes.length >= totalQuantity) {
-                    // Remplacer le dernier siège sélectionné
-                    const lastSelectedId = siegesSelectionnes[siegesSelectionnes.length - 1];
-                    const lastSelectedBtn = document.querySelector(`[data-siege-id="${lastSelectedId}"]`);
-                    
-                    // Désélectionner l'ancien
-                    lastSelectedBtn.classList.remove('selected', 'btn-warning');
-                    if (lastSelectedBtn.classList.contains('pre-selected')) {
-                        lastSelectedBtn.classList.add('btn-success');
-                    } else if (lastSelectedBtn.dataset.siegeType === 'Handicape') {
-                        lastSelectedBtn.classList.add('btn-outline-info');
-                    } else {
-                        lastSelectedBtn.classList.add('btn-outline-primary');
-                    }
-                    
-                    siegesSelectionnes = siegesSelectionnes.filter(id => id !== lastSelectedId);
+                    alert(`Vous ne pouvez sélectionner que ${totalQuantity} siège${totalQuantity > 1 ? 's' : ''}. Veuillez d'abord désélectionner un siège.`);
+                    return;
                 }
                 
                 // Sélectionner le nouveau siège
                 siegesSelectionnes.push(siegeId);
-                siegeBtn.classList.add('selected', 'btn-warning');
-                siegeBtn.classList.remove('btn-outline-primary', 'btn-outline-info', 'btn-success');
+                siegeBtn.classList.add('selected');
+                if (checkmark) {
+                    checkmark.style.display = 'block';
+                }
             }
             
             // Vérifier si les sièges sont adjacents pour plus d'un billet
@@ -459,14 +561,20 @@ else
 
         function zoomIn() {
             const container = document.querySelector('.sieges-container');
-            const currentScale = parseFloat(container.style.transform?.replace('scale(', '').replace(')', '')) || 1;
-            container.style.transform = `scale(${Math.min(currentScale + 0.1, 2)})`;
+            const match = container.style.transform?.match(/scale\(([^)]+)\)/);
+            const currentScale = match ? parseFloat(match[1]) : 1;
+            const newScale = Math.min(currentScale + 0.1, 2);
+            container.style.transform = `scale(${newScale})`;
+            container.style.transformOrigin = 'center top';
         }
 
         function zoomOut() {
             const container = document.querySelector('.sieges-container');
-            const currentScale = parseFloat(container.style.transform?.replace('scale(', '').replace(')', '')) || 1;
-            container.style.transform = `scale(${Math.max(currentScale - 0.1, 0.5)})`;
+            const match = container.style.transform?.match(/scale\(([^)]+)\)/);
+            const currentScale = match ? parseFloat(match[1]) : 1;
+            const newScale = Math.max(currentScale - 0.1, 0.5);
+            container.style.transform = `scale(${newScale})`;
+            container.style.transformOrigin = 'center top';
         }
 
         // Gestion du formulaire de confirmation

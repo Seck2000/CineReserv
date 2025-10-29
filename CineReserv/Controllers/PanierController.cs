@@ -87,10 +87,17 @@ namespace CineReserv.Controllers
         [HttpPost]
         public async Task<IActionResult> Modifier(int id, int nombrePlaces)
         {
-            var panierItem = await _context.PanierItems.FindAsync(id);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var sessionId = GetSessionId();
+
+            var panierItem = await _context.PanierItems
+                .FirstOrDefaultAsync(p => p.Id == id && 
+                    ((userId != null && p.UserId == userId) || (userId == null && p.SessionId == sessionId)));
+
             if (panierItem == null)
             {
-                return NotFound();
+                TempData["ErrorMessage"] = "Article non trouvé ou accès refusé";
+                return RedirectToAction(nameof(Index));
             }
 
             if (nombrePlaces <= 0)
@@ -110,11 +117,21 @@ namespace CineReserv.Controllers
         [HttpPost]
         public async Task<IActionResult> Supprimer(int id)
         {
-            var panierItem = await _context.PanierItems.FindAsync(id);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var sessionId = GetSessionId();
+
+            var panierItem = await _context.PanierItems
+                .FirstOrDefaultAsync(p => p.Id == id && 
+                    ((userId != null && p.UserId == userId) || (userId == null && p.SessionId == sessionId)));
+
             if (panierItem != null)
             {
                 _context.PanierItems.Remove(panierItem);
                 await _context.SaveChangesAsync();
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Article non trouvé ou accès refusé";
             }
 
             return RedirectToAction(nameof(Index));

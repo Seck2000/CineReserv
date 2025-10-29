@@ -11,20 +11,11 @@ namespace CineReserv.Models
         [StringLength(100)]
         public string Nom { get; set; } = string.Empty;
         
-        public DateTime DateNaissance { get; set; }
-        
-        [StringLength(200)]
-        public string Adresse { get; set; } = string.Empty;
-        
-        [StringLength(10)]
-        public string CodePostal { get; set; } = string.Empty;
-        
-        [StringLength(100)]
-        public string Ville { get; set; } = string.Empty;
+        // Champs d'inscription simplifiés: suppression des champs d'adresse/date
         
         [Required]
-        [StringLength(30)]
-        public string TypeUtilisateur { get; set; } = "Client"; // "Client" ou "Fournisseur/Organisateur"
+        [StringLength(20)]
+        public string TypeUtilisateur { get; set; } = "Client"; // "Client" ou "Fournisseur"
         
         [StringLength(200)]
         public string? NomEntreprise { get; set; } // Pour les fournisseurs

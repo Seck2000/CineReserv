@@ -69,6 +69,16 @@
                         <a asp-action="Index" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Retour à mes réservations
                         </a>
+                        @{
+                            // Lien facture si une Invoice existe pour cette réservation
+                            var invoiceId = ViewBag.InvoiceId as int?;
+                        }
+                        @if (invoiceId.HasValue && invoiceId.Value > 0)
+                        {
+                            <a asp-controller="Facturation" asp-action="Details" asp-route-id="@invoiceId" class="btn btn-outline-primary">
+                                <i class="fas fa-file-invoice"></i> Voir la facture
+                            </a>
+                        }
                         @if (Model.Statut == "Confirmee" && Model.Seance.DateHeure > DateTime.Now.AddHours(2))
                         {
                             <form method="post" asp-action="Cancel" class="d-inline">

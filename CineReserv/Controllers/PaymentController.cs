@@ -91,10 +91,6 @@ namespace CineReserv.Controllers
                     {
                         { "customer_name", $"{user?.Prenom} {user?.Nom}" },
                         { "customer_email", user?.Email ?? "" },
-                        { "customer_address", user?.Adresse ?? "" },
-                        { "customer_city", user?.Ville ?? "" },
-                        { "customer_state", "QC" },
-                        { "customer_postal_code", user?.CodePostal ?? "" },
                         { "userId", userId },
                         { "panierItems", string.Join(",", panierItems.Select(i => i.Id)) }
                     }
@@ -116,7 +112,7 @@ namespace CineReserv.Controllers
                             CategorieAgeId = item.CategorieAgeId,
                             NomClient = user?.Prenom + " " + user?.Nom,
                             EmailClient = user?.Email ?? "",
-                            TelephoneClient = user?.PhoneNumber ?? "",
+                            TelephoneClient = string.Empty,
                             NombrePlaces = item.Quantite,
                             PrixUnitaire = item.PrixTotal / item.Quantite,
                             PrixTotal = item.PrixTotal,
@@ -159,6 +155,32 @@ namespace CineReserv.Controllers
                     // Sauvegarder les sièges
                     _context.Sieges.AddRange(sieges);
 
+                    // Créer les factures (une par réservation)
+                    var invoices = new List<CineReserv.Models.Invoice>();
+                    foreach (var reservation in reservations)
+                    {
+                        var seance = await _context.Seances
+                            .Include(s => s.Film)
+                            .FirstAsync(s => s.Id == reservation.SeanceId);
+
+                        var invoice = new CineReserv.Models.Invoice
+                        {
+                            NumeroFacture = $"INV-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..8].ToUpper()}",
+                            ReservationId = reservation.Id,
+                            ClientId = reservation.UserId,
+                            FournisseurId = seance.FournisseurId ?? string.Empty,
+                            Montant = reservation.PrixTotal,
+                            DateFacture = DateTime.Now,
+                            Statut = "Payée",
+                            NomClient = reservation.NomClient,
+                            EmailClient = reservation.EmailClient,
+                            NomFournisseur = seance.FournisseurId ?? string.Empty,
+                            EmailFournisseur = string.Empty
+                        };
+                        invoices.Add(invoice);
+                    }
+                    _context.Invoices.AddRange(invoices);
+
                     // Vider le panier
                     _context.PanierItems.RemoveRange(panierItems);
 
@@ -176,14 +198,16 @@ namespace CineReserv.Controllers
             catch (StripeException ex)
             {
                 _logger.LogError(ex, "Erreur Stripe lors du traitement du paiement");
+                // En cas d'erreur Stripe (carte refusée, etc.), rediriger vers Failure
                 TempData["ErrorMessage"] = $"Erreur de paiement : {ex.Message}";
-                return RedirectToAction("Index");
+                return RedirectToAction("Failure");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Erreur lors du traitement du paiement");
+                // Pour toute autre erreur, rediriger vers Failure
                 TempData["ErrorMessage"] = "Une erreur est survenue lors du traitement du paiement";
-                return RedirectToAction("Index");
+                return RedirectToAction("Failure");
             }
         }
 

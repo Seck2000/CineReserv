@@ -36,7 +36,9 @@ namespace CineReserv.Controllers
             }
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            
+
+            // Pour les besoins du TP: si aucune facture n'est créée, on projette les réservations
+            // comme des "factures" en mémoire afin d'afficher quelque chose au fournisseur.
             var factures = await _context.Invoices
                 .Include(i => i.Reservation)
                     .ThenInclude(r => r.Seance)
@@ -45,6 +47,43 @@ namespace CineReserv.Controllers
                 .Where(i => i.FournisseurId == userId)
                 .OrderByDescending(i => i.DateFacture)
                 .ToListAsync();
+
+            if (!factures.Any())
+            {
+                // Récupérer toutes les séances (comme le Dashboard), puis leurs réservations
+                var seances = await _context.Seances
+                    .Include(s => s.Film)
+                    .Include(s => s.Salle)
+                    .ToListAsync();
+
+                var seanceIds = seances.Select(s => s.Id).ToList();
+
+                var reservations = await _context.Reservations
+                    .Include(r => r.Seance)
+                        .ThenInclude(s => s.Film)
+                    .Include(r => r.User)
+                    .Where(r => seanceIds.Contains(r.SeanceId))
+                    .OrderByDescending(r => r.DateReservation)
+                    .ToListAsync();
+
+                factures = reservations.Select(r => new Invoice
+                {
+                    Id = 0, // non persisté
+                    NumeroFacture = string.IsNullOrWhiteSpace(r.NumeroReservation) ? $"FAKE-{r.Id}" : r.NumeroReservation,
+                    ReservationId = r.Id,
+                    Reservation = r,
+                    ClientId = r.UserId,
+                    Client = r.User,
+                    FournisseurId = userId!, // affichage pour le fournisseur connecté
+                    Montant = r.PrixTotal,
+                    DateFacture = r.DateReservation,
+                    Statut = "Payée",
+                    NomClient = r.NomClient,
+                    EmailClient = r.EmailClient,
+                    NomFournisseur = User.Identity?.Name ?? "Fournisseur",
+                    EmailFournisseur = User.Identity?.Name ?? ""
+                }).ToList();
+            }
 
             return View(factures);
         }
