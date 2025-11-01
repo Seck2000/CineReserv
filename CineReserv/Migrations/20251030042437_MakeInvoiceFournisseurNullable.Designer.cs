@@ -4,6 +4,7 @@ using CineReserv.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CineReserv.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251030042437_MakeInvoiceFournisseurNullable")]
+    partial class MakeInvoiceFournisseurNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -148,7 +151,62 @@ namespace CineReserv.Migrations
                     b.ToTable("CategoriesAge");
                 });
 
-            modelBuilder.Entity("CineReserv.Models.Facture", b =>
+            modelBuilder.Entity("CineReserv.Models.Film", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BandeAnnonceUrl")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("Classification")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<DateTime>("DateSortie")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<int>("Duree")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("EstActif")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Genre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<decimal>("Prix")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<string>("Titre")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Films");
+                });
+
+            modelBuilder.Entity("CineReserv.Models.Invoice", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -241,68 +299,7 @@ namespace CineReserv.Migrations
 
                     b.HasIndex("ReservationId");
 
-                    b.ToTable("Factures");
-                });
-
-            modelBuilder.Entity("CineReserv.Models.Film", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("BandeAnnonceUrl")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)");
-
-                    b.Property<string>("Classification")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<DateTime>("DateSortie")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("varchar(1000)");
-
-                    b.Property<int>("Duree")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("EstActif")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("FournisseurId")
-                        .HasMaxLength(450)
-                        .HasColumnType("varchar(450)");
-
-                    b.Property<string>("Genre")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
-
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)");
-
-                    b.Property<decimal>("Prix")
-                        .HasColumnType("decimal(65,30)");
-
-                    b.Property<string>("Titre")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FournisseurId");
-
-                    b.ToTable("Films");
+                    b.ToTable("Invoices");
                 });
 
             modelBuilder.Entity("CineReserv.Models.PanierItem", b =>
@@ -673,7 +670,7 @@ namespace CineReserv.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("CineReserv.Models.Facture", b =>
+            modelBuilder.Entity("CineReserv.Models.Invoice", b =>
                 {
                     b.HasOne("CineReserv.Models.ApplicationUser", "Client")
                         .WithMany()
@@ -697,16 +694,6 @@ namespace CineReserv.Migrations
                     b.Navigation("Fournisseur");
 
                     b.Navigation("Reservation");
-                });
-
-            modelBuilder.Entity("CineReserv.Models.Film", b =>
-                {
-                    b.HasOne("CineReserv.Models.ApplicationUser", "Fournisseur")
-                        .WithMany()
-                        .HasForeignKey("FournisseurId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Fournisseur");
                 });
 
             modelBuilder.Entity("CineReserv.Models.PanierItem", b =>
@@ -772,8 +759,7 @@ namespace CineReserv.Migrations
 
                     b.HasOne("CineReserv.Models.ApplicationUser", "Fournisseur")
                         .WithMany()
-                        .HasForeignKey("FournisseurId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("FournisseurId");
 
                     b.HasOne("CineReserv.Models.Salle", "Salle")
                         .WithMany("Seances")

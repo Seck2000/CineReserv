@@ -36,6 +36,16 @@ else
                             </div>
                         </div>
                         
+                        <!-- Contrôles de zoom (avant le plan de salle pour rester visibles) -->
+                        <div class="text-center mb-2" style="padding: 2px 0; position: sticky; top: 0; background-color: #2d2d2d; z-index: 10;">
+                            <button type="button" class="btn btn-outline-secondary btn-sm me-2" onclick="zoomOut()">
+                                Zoom -
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="zoomIn()">
+                                Zoom +
+                            </button>
+                        </div>
+
                         <!-- Plan de salle -->
                         <div class="sieges-container mb-0">
                             <!-- Écran -->
@@ -162,16 +172,6 @@ else
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Contrôles de zoom -->
-                        <div class="text-center mb-0 mt-0" style="padding: 2px 0;">
-                            <button type="button" class="btn btn-outline-secondary btn-sm me-2" onclick="zoomOut()">
-                                Zoom -
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="zoomIn()">
-                                Zoom +
-                            </button>
                         </div>
                     </div>
                 </div>

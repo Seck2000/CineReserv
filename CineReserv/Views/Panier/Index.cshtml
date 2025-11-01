@@ -63,23 +63,15 @@
                                                 <strong>Salle :</strong> @item.Seance.Salle.Nom<br>
                                                 <strong>Date :</strong> @item.Seance.DateHeure.ToString("dddd dd MMMM yyyy")<br>
                                                 <strong>Heure :</strong> @item.Seance.DateHeure.ToString("HH:mm")<br>
-                                                <strong>Prix unitaire :</strong> @item.PrixUnitaire.ToString("C")
+                                                <strong>Prix unitaire :</strong> @item.PrixUnitaire.ToUsdString()
                                             </p>
                                         </div>
                                         <div class="col-md-3">
-                                            <div class="d-flex align-items-center mb-2">
-                                                <label class="form-label me-2">Places :</label>
-                                                <form method="post" asp-action="Modifier" class="d-flex">
-                                                    <input type="hidden" name="id" value="@item.Id" />
-                                                    <input type="number" name="nombrePlaces" value="@item.NombrePlaces" 
-                                                           min="1" max="10" class="form-control me-2" style="width: 80px;" />
-                                                    <button type="submit" class="btn btn-outline-primary btn-sm">
-                                                        <i class="fas fa-sync"></i>
-                                                    </button>
-                                                </form>
+                                            <div class="mb-2">
+                                                <strong>Places : @item.NombrePlaces</strong>
                                             </div>
                                             <div class="mb-2">
-                                                <strong>Total : @item.PrixTotal.ToString("C")</strong>
+                                                <strong>Total : @item.PrixTotal.ToUsdString()</strong>
                                             </div>
                                             <form method="post" asp-action="Supprimer" class="d-inline">
                                                 <input type="hidden" name="id" value="@item.Id" />
@@ -111,7 +103,7 @@
                                 <hr>
                                 <div class="d-flex justify-content-between mb-3">
                                     <span><strong>Total à payer :</strong></span>
-                                    <strong class="h5 text-primary">@Model.Sum(i => i.PrixTotal).ToString("C")</strong>
+                                    <strong class="h5 text-primary">@Model.Sum(i => i.PrixTotal).ToUsdString()</strong>
                                 </div>
                                 
                                 <div class="d-grid gap-2">

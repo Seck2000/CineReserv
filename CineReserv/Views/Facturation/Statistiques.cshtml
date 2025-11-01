@@ -15,7 +15,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h5 class="card-title">Revenus Totaux</h5>
-                            <h2 class="card-text">@Model.TotalRevenus.ToString("C")</h2>
+                            <h2 class="card-text">@Model.TotalRevenus.ToUsdString()</h2>
                         </div>
                         <i class="fas fa-dollar-sign fa-3x opacity-50"></i>
                     </div>
@@ -45,7 +45,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h5 class="card-title">Ce Mois</h5>
-                            <h2 class="card-text">@Model.RevenusCeMois.ToString("C")</h2>
+                            <h2 class="card-text">@Model.RevenusCeMois.ToUsdString()</h2>
                         </div>
                         <i class="fas fa-calendar-alt fa-3x opacity-50"></i>
                     </div>
@@ -60,7 +60,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h5 class="card-title">Moyenne</h5>
-                            <h2 class="card-text">@Model.RevenusMoyens.ToString("C")</h2>
+                            <h2 class="card-text">@Model.RevenusMoyens.ToUsdString()</h2>
                         </div>
                         <i class="fas fa-chart-line fa-3x opacity-50"></i>
                     </div>
@@ -76,8 +76,8 @@
                     <h5>Comparaison Mensuelle</h5>
                 </div>
                 <div class="card-body">
-                    <p><strong>Ce mois-ci :</strong> @Model.RevenusCeMois.ToString("C")</p>
-                    <p><strong>Mois dernier :</strong> @Model.RevenusCeMoisDernier.ToString("C")</p>
+                    <p><strong>Ce mois-ci :</strong> @Model.RevenusCeMois.ToUsdString()</p>
+                    <p><strong>Mois dernier :</strong> @Model.RevenusCeMoisDernier.ToUsdString()</p>
                     @{
                         var evolution = Model.RevenusCeMoisDernier > 0 ? ((Model.RevenusCeMois - Model.RevenusCeMoisDernier) / Model.RevenusCeMoisDernier * 100) : 0;
                     }
@@ -114,7 +114,7 @@
                                         <strong>#@facture.NumeroFacture</strong><br>
                                         <small class="text-muted">@facture.DateFacture.ToString("dd/MM/yyyy")</small>
                                     </div>
-                                    <span class="badge bg-success rounded-pill">@facture.Montant.ToString("C")</span>
+                                    <span class="badge bg-success rounded-pill">@facture.Montant.ToUsdString()</span>
                                 </li>
                             }
                         </ul>
@@ -134,5 +134,7 @@
         </a>
     </div>
 </div>
+
+
 
 

@@ -16,9 +16,10 @@ namespace CineReserv.Models.ViewModels
         [EmailAddress(ErrorMessage = "L'email n'est pas valide")]
         public string Email { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Le type d'utilisateur est obligatoire")]
         public string TypeUtilisateur { get; set; } = string.Empty;
     }
 }
+
+
 
 

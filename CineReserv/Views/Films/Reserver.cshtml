@@ -21,7 +21,7 @@
                             <p><strong>Salle :</strong> @Model.Salle.Nom</p>
                             <p><strong>Date :</strong> @Model.DateHeure.ToString("dddd dd MMMM yyyy")</p>
                             <p><strong>Heure :</strong> @Model.DateHeure.ToString("HH:mm")</p>
-                            <p><strong>Prix par place :</strong> @Model.Prix.ToString("C")</p>
+                            <p><strong>Prix par place :</strong> @Model.Prix.ToUsdString()</p>
                         </div>
                     </div>
 
@@ -58,8 +58,8 @@
 
                         <div class="alert alert-info">
                             <h5>Récapitulatif</h5>
-                            <p><strong>Prix par place :</strong> @Model.Prix.ToString("C")</p>
-                            <p><strong>Total :</strong> <span id="total" class="h5 text-primary">@Model.Prix.ToString("C")</span></p>
+                            <p><strong>Prix par place :</strong> @Model.Prix.ToUsdString()</p>
+                            <p><strong>Total :</strong> <span id="total" class="h5 text-primary">@Model.Prix.ToUsdString()</span></p>
                         </div>
 
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
@@ -83,9 +83,9 @@
             const nombrePlaces = parseInt(this.value);
             const prixParPlace = @Model.Prix;
             const total = nombrePlaces * prixParPlace;
-            document.getElementById('total').textContent = total.toLocaleString('fr-FR', {
+            document.getElementById('total').textContent = total.toLocaleString('en-US', {
                 style: 'currency',
-                currency: 'EUR'
+                currency: 'USD'
             });
         });
     </script>

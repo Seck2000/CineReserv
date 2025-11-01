@@ -36,12 +36,12 @@
                                             <strong>Date :</strong> @item.Seance.DateHeure.ToString("dddd dd MMMM yyyy")<br>
                                             <strong>Heure :</strong> @item.Seance.DateHeure.ToString("HH:mm")<br>
                                             <strong>Places :</strong> @item.NombrePlaces<br>
-                                            <strong>Prix unitaire :</strong> @item.PrixUnitaire.ToString("C")
+                                            <strong>Prix unitaire :</strong> @item.PrixUnitaire.ToUsdString()
                                         </p>
                                     </div>
                                     <div class="col-md-3">
                                         <div class="text-end">
-                                            <strong class="h5">@item.PrixTotal.ToString("C")</strong>
+                                            <strong class="h5">@item.PrixTotal.ToUsdString()</strong>
                                         </div>
                                     </div>
                                 </div>
@@ -67,7 +67,7 @@
                             <hr>
                             <div class="d-flex justify-content-between mb-3">
                                 <span><strong>Total à payer :</strong></span>
-                                <strong class="h5 text-primary">@Model.Sum(i => i.PrixTotal).ToString("C")</strong>
+                                <strong class="h5 text-primary">@Model.Sum(i => i.PrixTotal).ToUsdString()</strong>
                             </div>
                             
                             <div class="d-grid gap-2">
@@ -85,5 +85,7 @@
         </div>
     </div>
 </div>
+
+
 
 

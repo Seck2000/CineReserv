@@ -56,8 +56,20 @@
                                         <strong>Date :</strong> @reservation.Seance.DateHeure.ToString("dd/MM/yyyy")<br>
                                         <strong>Heure :</strong> @reservation.Seance.DateHeure.ToString("HH:mm")<br>
                                         <strong>Places :</strong> @reservation.NombrePlaces<br>
-                                        <strong>Prix total :</strong> @reservation.PrixTotal.ToString("C")
+                                        <strong>Prix total :</strong> @reservation.PrixTotal.ToUsdString()
                                     </p>
+                                    @if (ViewBag.InvoiceIds != null && ViewBag.InvoiceIds.ContainsKey(reservation.Id))
+                                    {
+                                        var invoiceId = ViewBag.InvoiceIds[reservation.Id];
+                                        <p class="card-text">
+                                            <small class="text-muted">
+                                                <i class="fas fa-file-invoice"></i> 
+                                                <a asp-controller="Facturation" asp-action="Details" asp-route-id="@invoiceId" class="text-decoration-none">
+                                                    Facture disponible
+                                                </a>
+                                            </small>
+                                        </p>
+                                    }
                                     <p class="card-text">
                                         <small class="text-muted">
                                             Réservé le @reservation.DateReservation.ToString("dd/MM/yyyy à HH:mm")

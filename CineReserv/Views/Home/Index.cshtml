@@ -22,6 +22,35 @@
 </div>
 
 <div class="container">
+    <!-- Filtres: genre et titre -->
+    <form method="get" asp-action="Index" class="mb-4">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label mb-1">Genre</label>
+                <select name="genre" class="form-select form-select-sm">
+                    <option value="">Tous les genres</option>
+                    @foreach (var g in (ViewBag.Genres as List<string>) ?? new List<string>())
+                    {
+                        if ((string)ViewBag.GenreSelectionne == g)
+                        {
+                            <option value="@g" selected>@g</option>
+                        }
+                        else
+                        {
+                            <option value="@g">@g</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label mb-1">Titre (recherche)</label>
+                <input type="text" name="recherche" value="@ViewBag.Recherche" class="form-control form-control-sm" placeholder="Rechercher un titre..." />
+            </div>
+            <div class="col-md-2 d-grid">
+                <button type="submit" class="btn btn-primary btn-sm">Filtrer</button>
+            </div>
+        </div>
+    </form>
     <!-- Message informatif -->
     @if (TempData["InfoMessage"] != null)
     {
@@ -31,18 +60,6 @@
         </div>
     }
 
-    <!-- Barre de recherche -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <h6 class="mb-2">🔍 Rechercher un film</h6>
-            <div class="d-flex">
-                <input type="text" id="liveSearch" class="form-control form-control-sm me-2" placeholder="Tapez le titre, genre ou description du film..." style="height: 32px;">
-                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearSearch()" style="height: 32px;">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
-    </div>
 
     <!-- Tous les films -->
            @if (tousLesFilms != null && tousLesFilms.Any())
@@ -69,10 +86,10 @@
                                         <i class="fas fa-calendar"></i> @film.DateSortie.ToString("dd/MM/yyyy") •
                                         <i class="fas fa-certificate"></i> @film.Classification
                                     </p>
-                                    <p class="card-text">@(film.Description.Length > 100 ? film.Description.Substring(0, 100) + "..." : film.Description)</p>
+                                    <p class="card-text"><strong>Description :</strong> @(film.Description.Length > 100 ? film.Description.Substring(0, 100) + "..." : film.Description)</p>
                                             <div class="mt-auto">
                                                 <div class="d-flex justify-content-end">
-                                                    <a asp-controller="Films" asp-action="Details" asp-route-id="@film.Id"
+                                                    <a asp-controller="Films" asp-action="Details" asp-route-id="@film.Id" asp-route-returnUrl="@Url.Action("Index", "Home")"
                                                        class="btn btn-outline-primary">
                                                        <i class="fas fa-eye"></i> Voir détails
                                                    </a>
@@ -85,7 +102,7 @@
                 </div>
                 <div class="text-center mt-4">
                     <a asp-controller="Films" asp-action="Index" class="btn btn-primary btn-lg">
-                        <i class="fas fa-filter"></i> Filtrer et rechercher
+                        <i class="fas fa-film"></i> Voir tous les films à l'affiche
                     </a>
                 </div>
             </div>
@@ -155,85 +172,3 @@
     }
 </style>
 
-<script>
-    // Attendre que le DOM soit complètement chargé
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('Script de recherche chargé');
-        
-        // Recherche en temps réel
-        const searchInput = document.getElementById('liveSearch');
-        if (searchInput) {
-            searchInput.addEventListener('input', function() {
-                console.log('Recherche déclenchée:', this.value);
-                var searchTerm = this.value.toLowerCase().trim();
-                
-                // Filtrer les cartes de films
-                const filmCards = document.querySelectorAll('.film-card');
-                let visibleCount = 0;
-                
-                filmCards.forEach(function(card) {
-                    const container = card.closest('.col-md-6, .col-lg-4');
-                    if (!container) return;
-                    
-                    const title = card.querySelector('.card-title')?.textContent?.toLowerCase() || '';
-                    const description = card.querySelector('.card-text')?.textContent?.toLowerCase() || '';
-                    const genre = card.querySelector('.badge')?.textContent?.toLowerCase() || '';
-                    
-                    // Recherche dans titre, description et genre
-                    const matches = title.includes(searchTerm) || 
-                                   description.includes(searchTerm) || 
-                                   genre.includes(searchTerm);
-                    
-                    if (matches || searchTerm === '') {
-                        container.style.display = '';
-                        visibleCount++;
-                    } else {
-                        container.style.display = 'none';
-                    }
-                });
-                
-                // Gestion du message "Aucun résultat"
-                if (searchTerm.length > 0 && visibleCount === 0 && filmCards.length > 0) {
-                    showNoResults();
-                } else {
-                    hideNoResults();
-                }
-            });
-        }
-    });
-    
-    function clearSearch() {
-        const searchInput = document.getElementById('liveSearch');
-        if (searchInput) {
-            searchInput.value = '';
-        }
-        
-        // Afficher tous les films
-        const containers = document.querySelectorAll('.col-md-6, .col-lg-4');
-        containers.forEach(function(container) {
-            container.style.display = '';
-        });
-        
-        hideNoResults();
-    }
-    
-    function showNoResults() {
-        if (document.getElementById('noResultsMessage')) return;
-        
-        const container = document.getElementById('filmsContainer') || document.querySelector('.row');
-        if (container) {
-            const noResultsDiv = document.createElement('div');
-            noResultsDiv.id = 'noResultsMessage';
-            noResultsDiv.className = 'col-12 text-center py-5';
-            noResultsDiv.innerHTML = '<h3>Aucun film trouvé</h3><p class="text-muted">Essayez avec d\'autres mots-clés</p>';
-            container.parentNode.insertBefore(noResultsDiv, container.nextSibling);
-        }
-    }
-    
-    function hideNoResults() {
-        const noResults = document.getElementById('noResultsMessage');
-        if (noResults) {
-            noResults.remove();
-        }
-    }
-</script>

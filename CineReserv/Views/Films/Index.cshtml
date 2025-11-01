@@ -39,29 +39,62 @@
             }
             else
             {
-                <div class="row" id="filmsContainer">
-                    @foreach (var film in Model)
-                    {
-                        <div class="col-md-6 col-lg-4 mb-4">
-                            <div class="card h-100 shadow-sm film-card">
-                                <img src="@film.ImageUrl" class="card-img-top" alt="@film.Titre" style="height: 300px; object-fit: cover;">
-                                <div class="card-body d-flex flex-column">
-                                    <h5 class="card-title">@film.Titre</h5>
-                                    <p class="card-text text-muted">@film.Genre • @film.Duree min • @film.Classification</p>
-                                    <p class="card-text">@(film.Description.Length > 100 ? film.Description.Substring(0, 100) + "..." : film.Description)</p>
-                                           <div class="mt-auto">
-                                               <div class="d-flex justify-content-end">
-                                                   <a asp-action="Details" asp-route-id="@film.Id" class="btn btn-outline-primary">
-                                                       Voir les séances
-                                                   </a>
-                                               </div>
-                                           </div>
+                @foreach (var film in Model)
+                {
+                    <div class="card mb-4 shadow-sm">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-2">
+                                    <img src="@film.ImageUrl" class="img-fluid rounded" alt="@film.Titre" style="height: 180px; object-fit: cover;">
+                                </div>
+                                <div class="col-md-6">
+                                    <h4 class="mb-1">@film.Titre</h4>
+                                    <div class="mb-2">
+                                        <span class="badge bg-secondary me-2">@film.Classification</span>
+                                        <span class="text-muted me-2">@film.Duree min</span>
+                                        <span class="text-muted">@film.Genre</span>
+                                    </div>
+                                    <p class="text-muted mb-2"><strong>Description :</strong> @(film.Description.Length > 140 ? film.Description.Substring(0, 140) + "..." : film.Description)</p>
+                                    @if (!string.IsNullOrEmpty(film.BandeAnnonceUrl))
+                                    {
+                                        <a class="link-primary" href="@film.BandeAnnonceUrl" target="_blank">Voir la bande‑annonce</a>
+                                    }
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="fw-semibold text-uppercase small text-muted mb-2">Regular</div>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        @foreach (var seance in film.Seances.Where(s => s.EstActive && s.DateHeure > DateTime.Now).OrderBy(s => s.DateHeure).Take(3))
+                                        {
+                                            @if (ViewBag.IsSupplier == true)
+                                            {
+                                                <span class="btn btn-outline-secondary rounded-pill px-3" style="cursor: default; opacity: 0.6;" disabled>
+                                                    @seance.DateHeure.ToString("HH 'h' mm")
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <a asp-action="SelectionBillets" asp-route-seanceId="@seance.Id" class="btn btn-outline-primary rounded-pill px-3">
+                                                    @seance.DateHeure.ToString("HH 'h' mm")
+                                                </a>
+                                            }
+                                        }
+                                        @if (!(film.Seances?.Any(s => s.EstActive && s.DateHeure > DateTime.Now) ?? false))
+                                        {
+                                            <span class="text-muted small">Aucune séance prochaine</span>
+                                        }
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    }
-                </div>
+                    </div>
+                }
             }
         </div>
     </div>
+<style>
+    .film-card { transition: transform 0.2s ease; }
+    .film-card:hover { transform: translateY(-3px); }
+    .card-img-top { object-fit: cover; }
+    .btn.rounded-pill { border-radius: 999px !important; }
+</style>
 </div>

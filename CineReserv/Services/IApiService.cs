@@ -7,6 +7,6 @@ namespace CineReserv.Services
         Task<List<Film>> GetFilmsFromApiAsync();
         Task<Film> GetFilmByIdAsync(int id);
         Task SeedDatabaseAsync();
-        Task ForceSeedDatabaseAsync();
+        Task UpdateAllSallesTo200PlacesAsync();
     }
 }

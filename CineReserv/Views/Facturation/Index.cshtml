@@ -1,4 +1,4 @@
-@model IEnumerable<CineReserv.Models.Invoice>
+@model IEnumerable<CineReserv.Models.Facture>
 
 @{
     ViewData["Title"] = "Gestion des Factures";
@@ -32,7 +32,7 @@
                             <strong>Client:</strong> @facture.NomClient<br>
                             <strong>Film:</strong> @facture.Reservation.Seance.Film.Titre<br>
                             <strong>Date:</strong> @facture.DateFacture.ToString("dd/MM/yyyy")<br>
-                            <strong>Montant:</strong> @facture.Montant.ToString("C")<br>
+                            <strong>Montant:</strong> @facture.Montant.ToUsdString()<br>
                             <strong>Statut:</strong> 
                             @if (facture.Statut == "Payée")
                             {

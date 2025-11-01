@@ -58,12 +58,9 @@
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="TypeUtilisateur" class="form-label">Type d'utilisateur *</label>
-                            <select asp-for="TypeUtilisateur" class="form-select">
-                                <option value="Client">Client</option>
-                                <option value="Fournisseur">Fournisseur</option>
-                            </select>
-                            <span asp-validation-for="TypeUtilisateur" class="text-danger"></span>
+                            <label class="form-label">Type d'utilisateur</label>
+                            <input type="text" class="form-control" value="@Model.TypeUtilisateur" readonly />
+                            <small class="form-text text-muted">Le type d'utilisateur ne peut pas être modifié depuis cette page.</small>
                         </div>
 
                         <div class="d-flex justify-content-between">

@@ -18,7 +18,7 @@ namespace CineReserv.Data
         public DbSet<PanierItem> PanierItems { get; set; }
         public DbSet<CategorieAge> CategoriesAge { get; set; }
         public DbSet<Siege> Sieges { get; set; } // Added for seat management
-        public DbSet<Invoice> Invoices { get; set; } // Added for billing
+        public DbSet<Facture> Factures { get; set; } // Added for billing
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -86,23 +86,36 @@ namespace CineReserv.Data
                 .HasForeignKey(s => s.UserId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            // Configuration des relations pour Invoice
-            builder.Entity<Invoice>()
+            // Configuration des relations pour Facture
+            builder.Entity<Facture>()
                 .HasOne(i => i.Reservation)
                 .WithMany()
                 .HasForeignKey(i => i.ReservationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.Entity<Invoice>()
+            builder.Entity<Facture>()
                 .HasOne(i => i.Client)
                 .WithMany()
                 .HasForeignKey(i => i.ClientId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.Entity<Invoice>()
+            builder.Entity<Facture>()
                 .HasOne(i => i.Fournisseur)
                 .WithMany()
                 .HasForeignKey(i => i.FournisseurId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configuration des relations pour Film
+            builder.Entity<Film>()
+                .HasOne(f => f.Fournisseur)
+                .WithMany()
+                .HasForeignKey(f => f.FournisseurId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Seance>()
+                .HasOne(s => s.Fournisseur)
+                .WithMany()
+                .HasForeignKey(s => s.FournisseurId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

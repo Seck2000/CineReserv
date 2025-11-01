@@ -38,6 +38,16 @@ namespace CineReserv.Controllers
                 .OrderByDescending(r => r.DateReservation)
                 .ToListAsync();
 
+            // Récupérer les factures associées aux réservations
+            var reservationIds = reservations.Select(r => r.Id).ToList();
+            var invoices = await _context.Factures
+                .Where(i => reservationIds.Contains(i.ReservationId) && i.ClientId == userId)
+                .ToListAsync();
+
+            // Créer un dictionnaire pour faciliter l'accès aux factures depuis la vue
+            var invoiceIds = invoices.ToDictionary(i => i.ReservationId, i => i.Id);
+            ViewBag.InvoiceIds = invoiceIds;
+
             return View(reservations);
         }
 
@@ -67,15 +77,17 @@ namespace CineReserv.Controllers
                 return NotFound();
             }
 
-            // Récupérer les sièges réservés pour cette réservation
+            // Récupérer uniquement les sièges réservés pour cette réservation spécifique
             var siegesReserves = await _context.Sieges
-                .Where(s => s.UserId == userId && s.EstReserve == true)
+                .Where(s => s.ReservationId == reservation.Id && s.UserId == userId)
+                .OrderBy(s => s.Rang)
+                .ThenBy(s => s.Numero)
                 .ToListAsync();
 
             ViewBag.SiegesReserves = siegesReserves;
 
             // Chercher une facture liée à cette réservation pour ce client
-            var invoice = await _context.Invoices.FirstOrDefaultAsync(i => i.ReservationId == reservation.Id && i.ClientId == userId);
+            var invoice = await _context.Factures.FirstOrDefaultAsync(i => i.ReservationId == reservation.Id && i.ClientId == userId);
             if (invoice != null)
             {
                 ViewBag.InvoiceId = invoice.Id;

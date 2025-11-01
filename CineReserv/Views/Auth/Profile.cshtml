@@ -61,11 +61,11 @@
                         }
                         else
                         {
-                            <a href="#" class="btn btn-success">
-                                <i class="fas fa-plus"></i> Ajouter un film
+                            <a asp-controller="Dashboard" asp-action="Index" class="btn btn-success">
+                                <i class="fas fa-chart-bar"></i> Tableau de bord
                             </a>
-                            <a href="#" class="btn btn-outline-success">
-                                <i class="fas fa-chart-bar"></i> Mes statistiques
+                            <a asp-controller="Facturation" asp-action="Index" class="btn btn-outline-success">
+                                <i class="fas fa-file-invoice-dollar"></i> Facturation
                             </a>
                         }
                         <a asp-action="EditProfile" class="btn btn-outline-secondary">

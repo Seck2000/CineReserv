@@ -47,8 +47,8 @@
                             <p><strong>Salle :</strong> @Model.Seance.Salle.Nom</p>
                             <p><strong>Date et heure :</strong> @Model.Seance.DateHeure.ToString("dddd dd MMMM yyyy à HH:mm")</p>
                             <p><strong>Nombre de places :</strong> @Model.NombrePlaces</p>
-                            <p><strong>Prix unitaire :</strong> @Model.PrixUnitaire.ToString("C")</p>
-                            <p><strong>Total :</strong> <span class="h5 text-primary">@Model.PrixTotal.ToString("C")</span></p>
+                            <p><strong>Prix unitaire :</strong> @Model.PrixUnitaire.ToUsdString()</p>
+                            <p><strong>Total :</strong> <span class="h5 text-primary">@Model.PrixTotal.ToUsdString()</span></p>
                             
                             @if (ViewBag.SiegesReserves != null)
                             {
@@ -75,7 +75,7 @@
                         }
                         @if (invoiceId.HasValue && invoiceId.Value > 0)
                         {
-                            <a asp-controller="Facturation" asp-action="Details" asp-route-id="@invoiceId" class="btn btn-outline-primary">
+                            <a asp-controller="Facturation" asp-action="Details" asp-route-id="@invoiceId.Value" class="btn btn-outline-primary">
                                 <i class="fas fa-file-invoice"></i> Voir la facture
                             </a>
                         }

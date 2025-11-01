@@ -28,6 +28,27 @@ namespace CineReserv.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
+            // Si le fournisseur n'a aucune séance assignée, lui assigner automatiquement 
+            // toutes les séances non assignées (FournisseurId == null)
+            var hasSeances = await _context.Seances
+                .AnyAsync(s => s.FournisseurId == userId && s.EstActive);
+            
+            if (!hasSeances)
+            {
+                var seancesNonAssignees = await _context.Seances
+                    .Where(s => s.FournisseurId == null && s.EstActive)
+                    .ToListAsync();
+                
+                if (seancesNonAssignees.Any())
+                {
+                    foreach (var seance in seancesNonAssignees)
+                    {
+                        seance.FournisseurId = userId;
+                    }
+                    await _context.SaveChangesAsync();
+                }
+            }
+
             // Récupérer les statistiques
             var stats = await GetDashboardStats(userId);
 
@@ -36,16 +57,16 @@ namespace CineReserv.Controllers
 
         private async Task<DashboardStats> GetDashboardStats(string userId)
         {
-            // Pour l'instant, on récupère toutes les séances (simulation)
-            // Dans une vraie application, on associerait les films aux fournisseurs
+            // Récupérer uniquement les séances assignées au fournisseur connecté
             var seances = await _context.Seances
                 .Include(s => s.Salle)
                 .Include(s => s.Film)
+                .Where(s => s.EstActive && s.FournisseurId == userId)
                 .ToListAsync();
 
             var seanceIds = seances.Select(s => s.Id).ToList();
 
-            // Récupérer les réservations
+            // Récupérer les réservations pour ces séances
             var reservations = await _context.Reservations
                 .Include(r => r.Seance)
                     .ThenInclude(s => s.Film)
@@ -69,6 +90,22 @@ namespace CineReserv.Controllers
                 .Take(10)
                 .ToList();
 
+            // Clients les plus actifs (top 10 par nombre de réservations)
+            var clientsLesPlusActifs = reservations
+                .GroupBy(r => new { r.UserId, r.User })
+                .Select(g => new ClientActifStats
+                {
+                    UserId = g.Key.UserId,
+                    NomComplet = $"{g.Key.User?.Prenom} {g.Key.User?.Nom}",
+                    Email = g.Key.User?.Email ?? "",
+                    NombreReservations = g.Count(),
+                    TotalDepense = g.Sum(r => r.PrixTotal),
+                    TotalPlaces = g.Sum(r => r.NombrePlaces)
+                })
+                .OrderByDescending(c => c.NombreReservations)
+                .Take(10)
+                .ToList();
+
             return new DashboardStats
             {
                 TotalRevenus = totalRevenus,
@@ -77,7 +114,8 @@ namespace CineReserv.Controllers
                 ClientsActifs = clientsActifs,
                 NombreFilms = seances.Select(s => s.FilmId).Distinct().Count(),
                 NombreSeances = seances.Count,
-                ReservationsRecent = reservationsRecent
+                ReservationsRecent = reservationsRecent,
+                ClientsLesPlusActifs = clientsLesPlusActifs
             };
         }
     }
@@ -91,5 +129,16 @@ namespace CineReserv.Controllers
         public int NombreFilms { get; set; }
         public int NombreSeances { get; set; }
         public List<Reservation> ReservationsRecent { get; set; } = new List<Reservation>();
+        public List<ClientActifStats> ClientsLesPlusActifs { get; set; } = new List<ClientActifStats>();
+    }
+
+    public class ClientActifStats
+    {
+        public string UserId { get; set; } = string.Empty;
+        public string NomComplet { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public int NombreReservations { get; set; }
+        public decimal TotalDepense { get; set; }
+        public int TotalPlaces { get; set; }
     }
 }

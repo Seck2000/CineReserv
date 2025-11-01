@@ -21,11 +21,27 @@ namespace CineReserv.Controllers
             _apiService = apiService;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? genre, string? recherche)
         {
-            // Récupérer TOUS les films pour la page d'accueil
-            var tousLesFilms = await _context.Films
+            // Récupérer les films pour la page d'accueil
+            var query = _context.Films
                 .Where(f => f.EstActif)
+                .AsQueryable();
+
+            // Filtre par genre
+            if (!string.IsNullOrEmpty(genre))
+            {
+                var genreNormalized = genre.Trim();
+                query = query.Where(f => f.Genre == genreNormalized);
+            }
+
+            // Recherche par titre ou description
+            if (!string.IsNullOrEmpty(recherche))
+            {
+                query = query.Where(f => f.Titre.Contains(recherche) || f.Description.Contains(recherche));
+            }
+
+            var tousLesFilms = await query
                 .OrderByDescending(f => f.DateSortie)
                 .ToListAsync();
 
@@ -39,7 +55,8 @@ namespace CineReserv.Controllers
 
             ViewBag.TousLesFilms = tousLesFilms;
             ViewBag.Genres = genres;
-
+            ViewBag.GenreSelectionne = genre;
+            ViewBag.Recherche = recherche;
 
             return View();
         }
@@ -58,64 +75,6 @@ namespace CineReserv.Controllers
         public new IActionResult NotFound()
         {
             return View("NotFound");
-        }
-
-        // Action pour forcer le peuplement (utile pour le développement)
-        public async Task<IActionResult> ForceSeed()
-        {
-            try
-            {
-                await _apiService.ForceSeedDatabaseAsync();
-                TempData["SuccessMessage"] = "Base de données re-peuplée avec succès !";
-            }
-            catch (Exception ex)
-            {
-                TempData["ErrorMessage"] = $"Erreur lors du re-peuplement : {ex.Message}";
-            }
-            
-            return RedirectToAction("Index");
-        }
-
-        // Action pour vérifier le type d'utilisateur
-        public async Task<IActionResult> CheckUserType()
-        {
-            if (User.Identity?.IsAuthenticated == true)
-            {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
-                
-                if (user != null)
-                {
-                    TempData["InfoMessage"] = $"Utilisateur: {user.Prenom} {user.Nom} - Type: {user.TypeUtilisateur}";
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = "Utilisateur non trouvé";
-                }
-            }
-            else
-            {
-                TempData["ErrorMessage"] = "Aucun utilisateur connecté";
-            }
-            
-            return RedirectToAction("Index");
-        }
-
-        // Action pour forcer la synchronisation des données
-        public async Task<IActionResult> RefreshData()
-        {
-            try
-            {
-                // Forcer le rechargement des données depuis l'API
-                await _apiService.ForceSeedDatabaseAsync();
-                TempData["SuccessMessage"] = "Données synchronisées avec succès !";
-            }
-            catch (Exception ex)
-            {
-                TempData["ErrorMessage"] = $"Erreur lors de la synchronisation : {ex.Message}";
-            }
-            
-            return RedirectToAction("Index");
         }
     }
 }

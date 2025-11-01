@@ -107,6 +107,7 @@ namespace CineReserv.Controllers
             else
             {
                 panierItem.NombrePlaces = nombrePlaces;
+                panierItem.Quantite = nombrePlaces; // Synchroniser Quantite avec NombrePlaces pour le calcul du prix
             }
 
             await _context.SaveChangesAsync();
@@ -152,30 +153,6 @@ namespace CineReserv.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
-        }
-
-        // GET: Panier/Paiement
-        public async Task<IActionResult> Paiement()
-        {
-            var sessionId = GetSessionId();
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            var panierItems = await _context.PanierItems
-                .Include(p => p.Seance)
-                    .ThenInclude(s => s.Film)
-                .Include(p => p.Seance)
-                    .ThenInclude(s => s.Salle)
-                .Include(p => p.CategorieAge)
-                .Where(p => (userId != null && p.UserId == userId) || (userId == null && p.SessionId == sessionId))
-                .ToListAsync();
-
-            if (!panierItems.Any())
-            {
-                TempData["ErrorMessage"] = "Votre panier est vide.";
-                return RedirectToAction("Index");
-            }
-
-            return View(panierItems);
         }
 
         private string GetSessionId()

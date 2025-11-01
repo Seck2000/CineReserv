@@ -21,7 +21,7 @@
                                 <span class="badge bg-secondary me-2">@seance.Film.Classification</span>
                                 <span class="badge bg-info me-2">@seance.Film.Duree min</span>
                             </div>
-                            <p class="text-muted mb-3">@seance.Film.Description</p>
+                            <p class="text-muted mb-3"><strong>Description :</strong> @seance.Film.Description</p>
                             
                             <div class="row">
                                 <div class="col-md-6">
@@ -69,18 +69,11 @@
                                     </div>
                                 </div>
                                 <div class="col-md-3 text-end">
-                                    <span class="h5 text-primary" id="price_@categorie.Id">@categorie.Prix.ToString("C")</span>
+                                    <span class="h5 text-primary" id="price_@categorie.Id">@categorie.Prix.ToUsdString()</span>
                                     <input type="hidden" id="unitPrice_@categorie.Id" value="@categorie.Prix">
                                 </div>
                             </div>
                         }
-                        
-                        <!-- Bouton de soumission -->
-                        <div class="text-center mt-4">
-                            <button type="submit" class="btn btn-primary btn-lg w-100" id="btnContinuer" disabled>
-                                Procéder à <span id="btnTotal">$0.00</span>
-                            </button>
-                        </div>
                     </form>
                 </div>
             </div>
@@ -109,7 +102,14 @@
                         </div>
                     </div>
                     
-                    <div class="text-center">
+                    <!-- Bouton de soumission dans le résumé -->
+                    <div class="text-center mt-3">
+                        <button type="submit" form="billetForm" class="btn btn-primary btn-lg w-100" id="btnContinuer" disabled>
+                            Procéder à <span id="btnTotal">$0.00</span>
+                        </button>
+                    </div>
+                    
+                    <div class="text-center mt-2">
                         <small class="text-muted">
                             <i class="fas fa-info-circle"></i> 
                             Les frais de service peuvent s'appliquer

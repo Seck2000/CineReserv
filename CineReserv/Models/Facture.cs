@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CineReserv.Models
 {
-    public class Invoice
+    public class Facture
     {
         public int Id { get; set; }
         
@@ -17,9 +17,8 @@ namespace CineReserv.Models
         public string ClientId { get; set; } = string.Empty;
         public virtual ApplicationUser Client { get; set; } = null!;
         
-        [Required]
-        public string FournisseurId { get; set; } = string.Empty;
-        public virtual ApplicationUser Fournisseur { get; set; } = null!;
+        public string? FournisseurId { get; set; }
+        public virtual ApplicationUser? Fournisseur { get; set; }
         
         [Required]
         [DataType(DataType.Currency)]

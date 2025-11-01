@@ -39,7 +39,7 @@ namespace CineReserv.Controllers
 
             // Pour les besoins du TP: si aucune facture n'est créée, on projette les réservations
             // comme des "factures" en mémoire afin d'afficher quelque chose au fournisseur.
-            var factures = await _context.Invoices
+            var factures = await _context.Factures
                 .Include(i => i.Reservation)
                     .ThenInclude(r => r.Seance)
                         .ThenInclude(s => s.Film)
@@ -50,14 +50,16 @@ namespace CineReserv.Controllers
 
             if (!factures.Any())
             {
-                // Récupérer toutes les séances (comme le Dashboard), puis leurs réservations
+                // Récupérer uniquement les séances du fournisseur connecté
                 var seances = await _context.Seances
                     .Include(s => s.Film)
                     .Include(s => s.Salle)
+                    .Where(s => s.FournisseurId == userId && s.EstActive)
                     .ToListAsync();
 
                 var seanceIds = seances.Select(s => s.Id).ToList();
 
+                // Récupérer uniquement les réservations pour ces séances
                 var reservations = await _context.Reservations
                     .Include(r => r.Seance)
                         .ThenInclude(s => s.Film)
@@ -66,7 +68,7 @@ namespace CineReserv.Controllers
                     .OrderByDescending(r => r.DateReservation)
                     .ToListAsync();
 
-                factures = reservations.Select(r => new Invoice
+                factures = reservations.Select(r => new Facture
                 {
                     Id = 0, // non persisté
                     NumeroFacture = string.IsNullOrWhiteSpace(r.NumeroReservation) ? $"FAKE-{r.Id}" : r.NumeroReservation,
@@ -96,10 +98,17 @@ namespace CineReserv.Controllers
                 return NotFound();
             }
 
-            var facture = await _context.Invoices
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _context.Users.FindAsync(userId);
+            var isSupplier = user?.TypeUtilisateur == "Fournisseur/Organisateur";
+
+            var facture = await _context.Factures
                 .Include(i => i.Reservation)
                     .ThenInclude(r => r.Seance)
                         .ThenInclude(s => s.Film)
+                .Include(i => i.Reservation)
+                    .ThenInclude(r => r.Seance)
+                        .ThenInclude(s => s.Salle)
                 .Include(i => i.Client)
                 .FirstOrDefaultAsync(i => i.Id == id);
 
@@ -108,6 +117,24 @@ namespace CineReserv.Controllers
                 return NotFound();
             }
 
+            // Vérifier les autorisations : le client peut voir ses factures, le fournisseur peut voir ses factures
+            if (!isSupplier && facture.ClientId != userId)
+            {
+                TempData["ErrorMessage"] = "Accès refusé. Vous ne pouvez consulter que vos propres factures.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            if (isSupplier && facture.FournisseurId != userId)
+            {
+                TempData["ErrorMessage"] = "Accès refusé. Vous ne pouvez consulter que vos propres factures.";
+                return RedirectToAction("Index", "Facturation");
+            }
+            // Récupérer les sièges liés à la réservation pour affichage
+            var sieges = await _context.Sieges
+                .Where(s => s.ReservationId == facture.ReservationId)
+                .OrderBy(s => s.Rang).ThenBy(s => s.Numero)
+                .ToListAsync();
+            ViewBag.Sieges = sieges;
             return View(facture);
         }
 
@@ -119,7 +146,7 @@ namespace CineReserv.Controllers
                 return NotFound();
             }
 
-            var facture = await _context.Invoices
+            var facture = await _context.Factures
                 .Include(i => i.Reservation)
                     .ThenInclude(r => r.Seance)
                         .ThenInclude(s => s.Film)
@@ -131,8 +158,14 @@ namespace CineReserv.Controllers
                 return NotFound();
             }
 
+            // Récupérer les sièges pour l'impression
+            var sieges = await _context.Sieges
+                .Where(s => s.ReservationId == facture.ReservationId)
+                .OrderBy(s => s.Rang).ThenBy(s => s.Numero)
+                .ToListAsync();
+
             // Générer le contenu HTML de la facture
-            var htmlContent = GenerateInvoiceHtml(facture);
+            var htmlContent = GenerateInvoiceHtml(facture, sieges);
             
             // Pour l'instant, on retourne le HTML
             // Dans une vraie application, on utiliserait une librairie comme iTextSharp pour générer un PDF
@@ -144,7 +177,7 @@ namespace CineReserv.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             
-            var factures = await _context.Invoices
+            var factures = await _context.Factures
                 .Where(i => i.FournisseurId == userId && i.Statut == "Payée")
                 .ToListAsync();
 
@@ -161,7 +194,7 @@ namespace CineReserv.Controllers
             return View(statistiques);
         }
 
-        private string GenerateInvoiceHtml(Invoice facture)
+        private string GenerateInvoiceHtml(Facture facture, List<Siege> sieges)
         {
             return $@"
 <!DOCTYPE html>
@@ -222,6 +255,11 @@ namespace CineReserv.Controllers
                 <td>{facture.Reservation.NombrePlaces}</td>
                 <td>{facture.Reservation.PrixUnitaire:C}</td>
                 <td>{facture.Montant:C}</td>
+            </tr>
+            <tr>
+                <td colspan='5'>
+                    <strong>Sièges:</strong> {(sieges != null && sieges.Any() ? string.Join(", ", sieges.Select(s => s.NomComplet)) : "Non renseignés")}
+                </td>
             </tr>
         </tbody>
     </table>
