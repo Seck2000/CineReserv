@@ -1,0 +1,33 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using CineReserv.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+@if (SignInManager.IsSignedIn(User))
+{
+    <div class="d-flex align-items-center">
+        @{
+            var user = await UserManager.GetUserAsync(User);
+            var userName = user?.Prenom + " " + user?.Nom;
+        }
+        <span class="text-white me-3">
+            <i class="fas fa-user"></i> Bonjour, @userName
+        </span>
+        <form asp-controller="Auth" asp-action="Logout" method="post" class="d-inline">
+            <button type="submit" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-sign-out-alt"></i> Déconnexion
+            </button>
+        </form>
+    </div>
+}
+else
+{
+    <div class="d-flex">
+        <a asp-controller="Auth" asp-action="Login" class="btn btn-outline-primary btn-sm me-2">
+            <i class="fas fa-sign-in-alt"></i> Connexion
+        </a>
+        <a asp-controller="Auth" asp-action="Register" class="btn btn-primary btn-sm">
+            <i class="fas fa-user-plus"></i> Inscription
+        </a>
+    </div>
+}

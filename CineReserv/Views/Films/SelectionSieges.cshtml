@@ -1,0 +1,633 @@
+@using CineReserv.Models
+@{
+    ViewData["Title"] = "Sélection des sièges";
+    var seance = ViewBag.Seance as Seance;
+    var sieges = ViewBag.Sieges as List<Siege>;
+    var siegesPreAttribues = ViewBag.SiegesPreAttribues as List<int>;
+    var totalQuantity = (int)ViewBag.TotalQuantity;
+    var reservationData = ViewBag.ReservationData as string;
+}
+
+@if (seance == null || sieges == null)
+{
+    <div class="alert alert-danger">Une erreur est survenue lors du chargement des informations de la séance ou des sièges.</div>
+}
+else
+{
+    <div class="container-fluid mt-0 pt-2" style="background-color: #1a1a1a;">
+        <div class="row">
+            <!-- Colonne de gauche: Détails du film et plan de salle -->
+            <div class="col-md-8">
+                <div class="card mb-0" style="background-color: #2d2d2d; border: none; color: white;">
+                    <div class="card-body p-1">
+                        <!-- Détails du film -->
+                        <div class="d-flex align-items-center mb-0">
+                            <img src="@seance.Film.ImageUrl" class="img-fluid rounded me-1" alt="@seance.Film.Titre" style="width: 35px; height: 50px; object-fit: cover;">
+                            <div>
+                                <h6 class="card-title mb-0 text-white" style="font-size: 12px;">@seance.Film.Titre</h6>
+                                <p class="text-muted mb-0" style="font-size: 9px;">
+                                    <span class="badge bg-secondary me-1" style="font-size: 8px; padding: 2px 4px;">@seance.Film.Classification</span>
+                                    <span class="badge bg-info me-1" style="font-size: 8px; padding: 2px 4px;">Français</span>
+                                    <span class="badge bg-primary" style="font-size: 8px; padding: 2px 4px;">REGULAR</span>
+                                </p>
+                                <p class="text-muted mb-0" style="font-size: 9px;">
+                                    <strong>@seance.DateHeure.ToString("dd MMM yyyy")</strong> à <strong>@seance.DateHeure.ToString("HH:mm")</strong> | <strong>@seance.Salle.Nom</strong>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Contrôles de zoom (avant le plan de salle pour rester visibles) -->
+                        <div class="text-center mb-2" style="padding: 2px 0; position: sticky; top: 0; background-color: #2d2d2d; z-index: 10;">
+                            <button type="button" class="btn btn-outline-secondary btn-sm me-2" onclick="zoomOut()">
+                                Zoom -
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="zoomIn()">
+                                Zoom +
+                            </button>
+                        </div>
+
+                        <!-- Plan de salle -->
+                        <div class="sieges-container mb-0">
+                            <!-- Écran -->
+                            <div class="text-center mb-0" style="padding: 2px 0;">
+                                <div class="bg-secondary text-white rounded" style="font-size: 11px; font-weight: bold; padding: 3px;">
+                                    ÉCRAN
+                                </div>
+                            </div>
+
+                            <!-- Sièges -->
+                            @{
+                                var siegesGroupes = sieges.GroupBy(s => s.Rang).OrderBy(g => g.Key);
+                            }
+                            
+                            @foreach (var groupe in siegesGroupes)
+                            {
+                                <div class="row mb-0 align-items-center">
+                                    <div class="col-1 text-end">
+                                        <strong class="text-white" style="font-size: 9px;">@groupe.Key</strong>
+                                    </div>
+                                    <div class="col-10">
+                                        <div class="d-flex justify-content-center gap-0 flex-wrap" style="gap: 0;">
+                                            @{
+                                                var siegesOrdered = groupe.OrderBy(s => s.Numero).ToList();
+                                                var seatGroupSize = seance.Salle.NombrePlaces > 50 ? 6 : 5; // Grouper par 5-6 sièges
+                                            }
+                                            @for (int i = 0; i < siegesOrdered.Count; i++)
+                                            {
+                                                var siege = siegesOrdered[i];
+                                                var isPreAttribue = siegesPreAttribues?.Contains(siege.Id) == true;
+                                                var siegeState = "available";
+                                                
+                                                // Déterminer l'état du siège
+                                                var currentUserId = ViewBag.CurrentUserId as string;
+                                                var siegeIdsReservesPourCetteSeance = ViewBag.SiegeIdsReservesPourCetteSeance as List<int> ?? new List<int>();
+                                                
+                                                // Un siège est occupé pour cette séance spécifique si :
+                                                // 1. Il est physiquement occupé (EstOccupe = true)
+                                                // 2. Il est dans la liste des sièges réservés pour cette séance (confirmés ou dans le panier)
+                                                
+                                                // Vérifier si le siège est réservé pour cette séance spécifique
+                                                var estReservePourCetteSeance = siegeIdsReservesPourCetteSeance.Contains(siege.Id);
+                                                
+                                                // Un siège réservé pour cette séance est OCCUPÉ (rouge, non cliquable), 
+                                                // que ce soit par le même utilisateur ou un autre
+                                                // Cela empêche la double réservation du même siège pour la même séance
+                                                
+                                                if (siege.EstOccupe)
+                                                {
+                                                    siegeState = "occupied";
+                                                }
+                                                else if (estReservePourCetteSeance)
+                                                {
+                                                    // Si le siège est réservé pour cette séance (confirmé ou dans le panier de n'importe quel utilisateur)
+                                                    // Il doit être OCCUPÉ (rouge, non cliquable) pour empêcher la double réservation
+                                                    siegeState = "occupied";
+                                                }
+                                                else if (isPreAttribue)
+                                                {
+                                                    siegeState = "pre-selected";
+                                                }
+                                                else if (siege.Type == "Handicape")
+                                                {
+                                                    siegeState = "handicap";
+                                                }
+
+                                                @if (i > 0 && i % seatGroupSize == 0)
+                                                {
+                                                    <!-- Espace pour créer une allée -->
+                                                    <div style="width: 12px; height: 24px; flex-shrink: 0;"></div>
+                                                }
+
+                                                <button type="button" 
+                                                        class="siege-btn siege-@siegeState @(isPreAttribue ? "pre-selected" : "")"
+                                                        data-siege-id="@siege.Id"
+                                                        data-siege-nom="@siege.NomComplet"
+                                                        data-siege-type="@siege.Type"
+                                                        data-siege-rang="@siege.Rang"
+                                                        data-siege-numero="@siege.Numero"
+                                                        data-siege-state="@siegeState"
+                                                        @{
+                                                            var siegeIdsReservesPourCetteSeanceDisabled = ViewBag.SiegeIdsReservesPourCetteSeance as List<int> ?? new List<int>();
+                                                            var estReservePourCetteSeanceDisabled = siegeIdsReservesPourCetteSeanceDisabled.Contains(siege.Id);
+                                                            // Un siège réservé pour cette séance doit être désactivé (non cliquable)
+                                                            // même si c'est le même utilisateur, pour empêcher la double réservation
+                                                            var shouldDisable = siege.EstOccupe || estReservePourCetteSeanceDisabled;
+                                                        }
+                                                        @(shouldDisable ? "disabled" : "")
+                                                        onclick="toggleSiege(@siege.Id, '@siege.NomComplet', '@siege.Type', '@siege.Rang', @siege.Numero)">
+                                                    <svg width="24" height="24" viewBox="0 0 42 42" xmlns="http://www.w3.org/2000/svg">
+                                                        <!-- Rectangle arrondi (siège) -->
+                                                        <rect x="2" y="6" width="38" height="34" rx="6" ry="6" class="siege-body" fill="none" stroke-width="1.5"/>
+                                                        <!-- Contour interne en forme de U (dossier et accoudoirs) -->
+                                                        <path d="M 8 12 L 8 24 L 12 28 L 30 28 L 34 24 L 34 12" class="siege-u-shape" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+                                                        <!-- Numéro du siège -->
+                                                        <text x="21" y="29" class="siege-number" text-anchor="middle" font-size="9" font-weight="bold" fill="white">@siege.Numero</text>
+                                                        @if (siege.Type == "Handicape")
+                                                        {
+                                                            <!-- Icône fauteuil roulant pour siège handicapé -->
+                                                            <g class="wheelchair-icon" fill="white">
+                                                                <circle cx="18" cy="22" r="3"/>
+                                                                <path d="M 15 25 L 17 30 L 21 30" stroke="white" stroke-width="1.5" fill="none"/>
+                                                                <rect x="21" y="19" width="8" height="6" rx="1"/>
+                                                                <circle cx="26" cy="29" r="2.5" fill="none" stroke="white" stroke-width="1.5"/>
+                                                            </g>
+                                                        }
+                                                    </svg>
+                                                    <!-- Checkmark overlay pour siège sélectionné -->
+                                                    <svg width="24" height="24" viewBox="0 0 42 42" class="checkmark-overlay" style="position: absolute; top: 0; left: 0; pointer-events: none; display: none;">
+                                                        <circle cx="31" cy="11" r="8" fill="#4A90E2"/>
+                                                        <path d="M 27 11 L 30 14 L 35 9" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                                    </svg>
+                                                </button>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="col-1 text-start">
+                                        <strong class="text-white" style="font-size: 9px;">@groupe.Key</strong>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Légende -->
+                        <div class="row mb-0 mt-0">
+                            <div class="col-12">
+                                <h6 class="text-white mb-0" style="font-size: 9px;">Légende :</h6>
+                                <div class="d-flex flex-wrap" style="gap: 8px;">
+                                    <div class="d-flex align-items-center">
+                                        <div class="siege-legend bg-primary me-1" style="width: 12px; height: 12px; border-radius: 2px;"></div>
+                                        <span class="text-white" style="font-size: 8px;">Disponible</span>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <div class="siege-legend bg-success me-1" style="width: 12px; height: 12px; border-radius: 3px;"></div>
+                                        <span class="text-white" style="font-size: 8px;">Pré-sélectionné</span>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <div class="siege-legend bg-warning me-1" style="width: 12px; height: 12px; border-radius: 3px;"></div>
+                                        <span class="text-white" style="font-size: 8px;">Sélectionné</span>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <div class="siege-legend bg-danger me-1" style="width: 12px; height: 12px; border-radius: 3px;"></div>
+                                        <span class="text-white" style="font-size: 8px;">Occupé</span>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <div class="siege-legend bg-info me-1" style="width: 12px; height: 12px; border-radius: 3px;"></div>
+                                        <span class="text-white" style="font-size: 8px;">Handicapé</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Colonne de droite: Résumé de la commande -->
+            <div class="col-md-4">
+                <div class="card shadow-sm sticky-top" style="top: 15px; background-color: #2d2d2d; border: none; color: white;">
+                    <div class="card-header" style="background-color: #3d3d3d; border: none;">
+                        <h5 class="mb-0 text-white">Résumé de la commande</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Sièges sélectionnés -->
+                        <div id="siegesSelectionnes" class="mb-3">
+                            <h6 class="text-white">Sièges :</h6>
+                            <div id="listeSieges" class="text-muted">
+                                Aucun siège sélectionné
+                            </div>
+                        </div>
+
+                        <!-- Détails des coûts -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-white">Billets (comprend les frais de réservation en ligne) :</span>
+                                <span class="text-white" id="totalBillets">$0.00</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-white">Impôts :</span>
+                                <span class="text-white" id="fraisService">$0.00</span>
+                            </div>
+                        </div>
+
+                        <!-- Bouton de paiement -->
+                        <form asp-action="ConfirmerSieges" asp-controller="Films" method="post" id="siegeForm" onsubmit="return handleFormSubmit(event)">
+                            <input type="hidden" name="seanceId" value="@seance.Id" />
+                            <input type="hidden" name="siegeIds" id="hiddenSiegeIds" value="" />
+                            <button type="submit" id="btnConfirmerSieges" class="btn btn-primary btn-lg w-100 mb-3" disabled>
+                                Paiement <span id="btnTotal">$0.00</span>
+                            </button>
+                        </form>
+
+                        <div class="text-center">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle"></i> 
+                                Les frais de service peuvent s'appliquer
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        body {
+            background-color: #1a1a1a !important;
+        }
+        
+        .siege-btn {
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            margin: 0;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .siege-btn svg {
+            width: 24px;
+            height: 24px;
+        }
+        
+        .siege-btn:hover:not(:disabled) {
+            transform: scale(1.15);
+            filter: brightness(1.2);
+        }
+        
+        .siege-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        
+        /* Siège disponible - Bleu (bg-primary de Bootstrap) */
+        .siege-available .siege-body {
+            fill: #0d6efd; /* Couleur Bootstrap bg-primary */
+            stroke: #0a58ca;
+        }
+        
+        .siege-available .siege-u-shape {
+            stroke: #084298;
+        }
+        
+        .siege-available .siege-number {
+            fill: white;
+        }
+        
+        /* Siège sélectionné - Orange/Jaune (bg-warning de Bootstrap) */
+        .siege-btn.selected .siege-body {
+            fill: #ffc107; /* Couleur Bootstrap bg-warning */
+            stroke: #ffcd39;
+            stroke-width: 2;
+        }
+        
+        .siege-btn.selected .siege-u-shape {
+            stroke: #cc9a06;
+            stroke-width: 2;
+        }
+        
+        .siege-btn.selected .siege-number {
+            fill: #000; /* Texte noir sur fond jaune/orange */
+        }
+        
+        /* Siège pré-sélectionné - Vert (bg-success de Bootstrap) */
+        .siege-pre-selected .siege-body {
+            fill: #198754; /* Couleur Bootstrap bg-success */
+            stroke: #146c43;
+        }
+        
+        .siege-pre-selected .siege-u-shape {
+            stroke: #0f5132;
+        }
+        
+        .siege-pre-selected .siege-number {
+            fill: white;
+        }
+        
+        /* Siège occupé - Rouge (bg-danger de Bootstrap) */
+        .siege-occupied .siege-body {
+            fill: #dc3545; /* Couleur Bootstrap bg-danger */
+            stroke: #b02a37;
+        }
+        
+        .siege-occupied .siege-u-shape {
+            stroke: #842029;
+        }
+        
+        .siege-occupied .siege-number {
+            fill: white;
+        }
+        
+        /* Siège réservé - Orange/Jaune */
+        .siege-reserved .siege-body {
+            fill: #F0AD4E;
+            stroke: #D58512;
+        }
+        
+        .siege-reserved .siege-u-shape {
+            stroke: #B8731A;
+        }
+        
+        .siege-reserved .siege-number {
+            fill: white;
+        }
+        
+        /* Siège handicapé - Bleu clair (bg-info de Bootstrap) */
+        .siege-handicap .siege-body {
+            fill: #0dcaf0; /* Couleur Bootstrap bg-info */
+            stroke: #0aa2c0;
+        }
+        
+        .siege-handicap .siege-u-shape {
+            stroke: #087990;
+        }
+        
+        .siege-handicap .siege-number {
+            fill: #000; /* Texte noir sur fond bleu clair */
+        }
+        
+        .siege-legend {
+            border: 1px solid #555;
+        }
+        
+        .card {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .sieges-container {
+            max-width: 100%;
+            overflow-x: auto;
+            transform-origin: center top;
+        }
+    </style>
+
+    <script>
+        let siegesSelectionnes = [];
+        let panierItems = [];
+        let totalBillets = 0;
+        let fraisService = 1.50;
+        let totalQuantity = @totalQuantity;
+        let reservationData = '@Html.Raw(reservationData)';
+
+        // Charger les articles du panier depuis la session
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPanierItems();
+            updateTotals();
+            initializePreSelectedSeats();
+            
+        });
+
+        function initializePreSelectedSeats() {
+            // Marquer les sièges pré-attribués comme sélectionnés
+            const preSelectedSeats = document.querySelectorAll('.pre-selected');
+            preSelectedSeats.forEach(seat => {
+                const siegeId = parseInt(seat.dataset.siegeId);
+                siegesSelectionnes.push(siegeId);
+                seat.classList.add('selected');
+                const checkmark = seat.querySelector('.checkmark-overlay');
+                if (checkmark) {
+                    checkmark.style.display = 'block';
+                }
+            });
+            
+            updateSiegesDisplay();
+            updateConfirmationButton();
+        }
+
+        function toggleSiege(siegeId, siegeNom, siegeType, siegeRang, siegeNumero) {
+            const siegeBtn = document.querySelector(`[data-siege-id="${siegeId}"]`);
+            
+            // Vérifier si le siège est désactivé (occupé ou réservé par un autre)
+            if (siegeBtn.disabled || siegeBtn.getAttribute('disabled') !== null) {
+                // Le siège est occupé ou réservé - ne pas permettre la sélection
+                return;
+            }
+            
+            // Vérifier l'état du siège depuis l'attribut data
+            const siegeState = siegeBtn.getAttribute('data-siege-state');
+            if (siegeState === 'occupied') {
+                // Le siège est occupé - ne pas permettre la sélection
+                return;
+            }
+            
+            const checkmark = siegeBtn.querySelector('.checkmark-overlay');
+            
+            if (siegesSelectionnes.includes(siegeId)) {
+                // Désélectionner
+                siegesSelectionnes = siegesSelectionnes.filter(id => id !== siegeId);
+                siegeBtn.classList.remove('selected');
+                if (checkmark) {
+                    checkmark.style.display = 'none';
+                }
+            } else {
+                // Vérifier si on peut sélectionner ce siège
+                if (siegesSelectionnes.length >= totalQuantity) {
+                    alert(`Vous ne pouvez sélectionner que ${totalQuantity} siège${totalQuantity > 1 ? 's' : ''}. Veuillez d'abord désélectionner un siège.`);
+                    return;
+                }
+                
+                // Sélectionner le nouveau siège
+                siegesSelectionnes.push(siegeId);
+                siegeBtn.classList.add('selected');
+                if (checkmark) {
+                    checkmark.style.display = 'block';
+                }
+            }
+            
+            // Vérifier si les sièges sont adjacents pour plus d'un billet
+            if (totalQuantity > 1 && siegesSelectionnes.length === totalQuantity) {
+                if (!areSeatsAdjacent()) {
+                    showAdjacentWarning();
+                } else {
+                    hideAdjacentWarning();
+                }
+            }
+            
+            updateSiegesDisplay();
+            updateConfirmationButton();
+        }
+
+        function updateSiegesDisplay() {
+            const listeSieges = document.getElementById('listeSieges');
+            
+            if (siegesSelectionnes.length === 0) {
+                listeSieges.innerHTML = 'Aucun siège sélectionné';
+                listeSieges.className = 'text-muted';
+            } else {
+                const siegesNoms = siegesSelectionnes.map(id => {
+                    const btn = document.querySelector(`[data-siege-id="${id}"]`);
+                    return btn.getAttribute('data-siege-nom');
+                });
+                listeSieges.innerHTML = siegesNoms.join(', ');
+                listeSieges.className = 'text-success fw-bold';
+            }
+        }
+
+        function handleFormSubmit(event) {
+            // Vérifier que des sièges sont sélectionnés
+            if (siegesSelectionnes.length === 0) {
+                alert('Veuillez sélectionner des sièges avant de continuer.');
+                event.preventDefault();
+                return false;
+            }
+            
+            // Vérifier que le nombre de sièges correspond
+            if (siegesSelectionnes.length !== totalQuantity) {
+                alert(`Vous devez sélectionner exactement ${totalQuantity} siège${totalQuantity > 1 ? 's' : ''}.`);
+                event.preventDefault();
+                return false;
+            }
+            
+            return true;
+        }
+
+        function updateConfirmationButton() {
+            const btn = document.getElementById('btnConfirmerSieges');
+            const total = totalBillets + fraisService;
+            const hiddenInput = document.getElementById('hiddenSiegeIds');
+            
+            if (siegesSelectionnes.length === totalQuantity) {
+                btn.disabled = false;
+                btn.classList.remove('disabled');
+                btn.style.pointerEvents = 'auto';
+                btn.style.opacity = '1';
+                btn.innerHTML = `Paiement <span id="btnTotal">$${total.toFixed(2)}</span>`;
+                hiddenInput.value = siegesSelectionnes.join(',');
+            } else {
+                btn.disabled = true;
+                btn.classList.add('disabled');
+                btn.style.pointerEvents = 'none';
+                btn.style.opacity = '0.6';
+                btn.innerHTML = `Paiement <span id="btnTotal">$0.00</span>`;
+                hiddenInput.value = '';
+            }
+        }
+
+        function areSeatsAdjacent() {
+            if (siegesSelectionnes.length <= 1) return true;
+            
+            const selectedSeats = siegesSelectionnes.map(id => {
+                const btn = document.querySelector(`[data-siege-id="${id}"]`);
+                return {
+                    id: id,
+                    rang: btn.dataset.siegeRang,
+                    numero: parseInt(btn.dataset.siegeNumero)
+                };
+            });
+            
+            // Grouper par rang
+            const seatsByRow = {};
+            selectedSeats.forEach(seat => {
+                if (!seatsByRow[seat.rang]) {
+                    seatsByRow[seat.rang] = [];
+                }
+                seatsByRow[seat.rang].push(seat);
+            });
+            
+            // Vérifier chaque rang
+            for (const rang in seatsByRow) {
+                const seatsInRow = seatsByRow[rang].sort((a, b) => a.numero - b.numero);
+                
+                for (let i = 1; i < seatsInRow.length; i++) {
+                    if (seatsInRow[i].numero !== seatsInRow[i-1].numero + 1) {
+                        return false;
+                    }
+                }
+            }
+            
+            return true;
+        }
+
+        function showAdjacentWarning() {
+            // Créer ou afficher le message d'avertissement
+            let warningDiv = document.getElementById('adjacentWarning');
+            if (!warningDiv) {
+                warningDiv = document.createElement('div');
+                warningDiv.id = 'adjacentWarning';
+                warningDiv.className = 'alert alert-warning mt-3';
+                warningDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Les sièges doivent être côte à côte pour plusieurs billets.';
+                document.querySelector('.sieges-container').parentNode.appendChild(warningDiv);
+            }
+            warningDiv.style.display = 'block';
+        }
+
+        function hideAdjacentWarning() {
+            const warningDiv = document.getElementById('adjacentWarning');
+            if (warningDiv) {
+                warningDiv.style.display = 'none';
+            }
+        }
+
+        function updateTotals() {
+            // Simulation des totaux basés sur le panier
+            totalBillets = 10.00; // À adapter selon les articles du panier
+            fraisService = 1.51;
+            
+            document.getElementById('totalBillets').textContent = '$' + totalBillets.toFixed(2);
+            document.getElementById('fraisService').textContent = '$' + fraisService.toFixed(2);
+            
+            updateConfirmationButton();
+        }
+
+        function loadPanierItems() {
+            // Simulation - à adapter selon votre logique de récupération du panier
+            console.log('Chargement des articles du panier...');
+        }
+
+        function zoomIn() {
+            const container = document.querySelector('.sieges-container');
+            const match = container.style.transform?.match(/scale\(([^)]+)\)/);
+            const currentScale = match ? parseFloat(match[1]) : 1;
+            const newScale = Math.min(currentScale + 0.1, 2);
+            container.style.transform = `scale(${newScale})`;
+            container.style.transformOrigin = 'center top';
+        }
+
+        function zoomOut() {
+            const container = document.querySelector('.sieges-container');
+            const match = container.style.transform?.match(/scale\(([^)]+)\)/);
+            const currentScale = match ? parseFloat(match[1]) : 1;
+            const newScale = Math.max(currentScale - 0.1, 0.5);
+            container.style.transform = `scale(${newScale})`;
+            container.style.transformOrigin = 'center top';
+        }
+
+        // Gestion du formulaire de confirmation
+        document.getElementById('siegeForm').addEventListener('submit', function(e) {
+            if (siegesSelectionnes.length !== totalQuantity) {
+                e.preventDefault();
+                alert(`Vous devez sélectionner exactement ${totalQuantity} siège${totalQuantity > 1 ? 's' : ''}.`);
+                return false;
+            }
+            
+            if (totalQuantity > 1 && !areSeatsAdjacent()) {
+                e.preventDefault();
+                alert('Les sièges doivent être côte à côte pour plusieurs billets.');
+                return false;
+            }
+            
+            return true;
+        });
+    </script>
+}

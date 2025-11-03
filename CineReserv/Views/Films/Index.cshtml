@@ -1,0 +1,83 @@
+@model IEnumerable<CineReserv.Models.Film>
+
+@{
+    ViewData["Title"] = "Films à l'affiche";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">🎬 Films à l'affiche</h1>
+            <p class="text-muted mb-4">Découvrez les films actuellement projetés dans nos salles</p>
+
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <h3>Aucun film à l'affiche actuellement</h3>
+                    <p class="text-muted">Il n'y a pas de séances programmées pour le moment. Revenez bientôt !</p>
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-primary btn-lg">
+                        <i class="fas fa-home"></i> Retour à l'accueil
+                    </a>
+                </div>
+            }
+            else
+            {
+                @foreach (var film in Model)
+                {
+                    <div class="card mb-4 shadow-sm">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-2">
+                                    <img src="@film.ImageUrl" class="img-fluid rounded" alt="@film.Titre" style="height: 180px; object-fit: cover;">
+                                </div>
+                                <div class="col-md-6">
+                                    <h4 class="mb-1">@film.Titre</h4>
+                                    <div class="mb-2">
+                                        <span class="badge bg-secondary me-2">@film.Classification</span>
+                                        <span class="text-muted me-2">@film.Duree min</span>
+                                        <span class="text-muted">@film.Genre</span>
+                                    </div>
+                                    <p class="text-muted mb-2"><strong>Description :</strong> @(film.Description.Length > 140 ? film.Description.Substring(0, 140) + "..." : film.Description)</p>
+                                    @if (!string.IsNullOrEmpty(film.BandeAnnonceUrl))
+                                    {
+                                        <a class="link-primary" href="@film.BandeAnnonceUrl" target="_blank">Voir la bande‑annonce</a>
+                                    }
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="fw-semibold text-uppercase small text-muted mb-2">Regular</div>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        @foreach (var seance in film.Seances.Where(s => s.EstActive && s.DateHeure > DateTime.Now).OrderBy(s => s.DateHeure).Take(3))
+                                        {
+                                            @if (ViewBag.IsSupplier == true)
+                                            {
+                                                <span class="btn btn-outline-secondary rounded-pill px-3" style="cursor: default; opacity: 0.6;" disabled>
+                                                    @seance.DateHeure.ToString("HH 'h' mm")
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <a asp-action="SelectionBillets" asp-route-seanceId="@seance.Id" class="btn btn-outline-primary rounded-pill px-3">
+                                                    @seance.DateHeure.ToString("HH 'h' mm")
+                                                </a>
+                                            }
+                                        }
+                                        @if (!(film.Seances?.Any(s => s.EstActive && s.DateHeure > DateTime.Now) ?? false))
+                                        {
+                                            <span class="text-muted small">Aucune séance prochaine</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+<style>
+    .film-card { transition: transform 0.2s ease; }
+    .film-card:hover { transform: translateY(-3px); }
+    .card-img-top { object-fit: cover; }
+    .btn.rounded-pill { border-radius: 999px !important; }
+</style>
+</div>
