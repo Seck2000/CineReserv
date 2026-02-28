@@ -1,6 +1,8 @@
-# CineReserv - Système de Réservation de Cinéma
+# Mon Portfolio - Portfolio Personnel React
 
-Application web ASP.NET Core pour la réservation de billets de cinéma avec paiement en ligne via Stripe.
+Application web Single Page Application (SPA) développée avec React et Vite pour présenter mon profil, mes compétences et mes projets en informatique.
+
+🚀 **Démo en ligne :** [https://mon-portfolio-iota-ivory.vercel.app](https://mon-portfolio-iota-ivory.vercel.app)
 
 ## 📋 Table des matières
 
@@ -8,215 +10,110 @@ Application web ASP.NET Core pour la réservation de billets de cinéma avec pai
 - [Fonctionnalités](#fonctionnalités)
 - [Prérequis](#prérequis)
 - [Installation](#installation)
-- [Configuration](#configuration)
-- [Exécution](#exécution)
 - [Structure du projet](#structure-du-projet)
+- [Déploiement](#déploiement)
+- [Auteur](#auteur)
 
 ## 📖 Description
 
-CineReserv permet aux clients de :
-- Rechercher et réserver des places de cinéma
-- Payer en ligne via Stripe
-- Consulter leurs réservations et factures
+Ce portfolio est une vitrine professionnelle interactive permettant de :
+- Consulter mon parcours et mon CV.
+- Visualiser mes projets GitHub via une interface soignée.
+- Me contacter via un formulaire interactif.
+- Localiser ma position géographique sur une carte dynamique.
 
-Les fournisseurs peuvent :
-- Voir leurs statistiques (revenus, nombre de clients, etc.)
-- Consulter leurs factures
+Il est conçu pour être performant, responsive et facile à maintenir.
 
 ## ✨ Fonctionnalités
 
-### Pour les clients :
-- Recherche de films par genre
-- Réservation de billets (choix de la catégorie : Enfant, Général, Aîné)
-- Sélection des sièges dans la salle
-- Panier de réservations
-- Paiement en ligne avec Stripe
-- Consultation des réservations et factures
+### Navigation et Interface
+- **SPA (Single Page Application)** : Navigation fluide sans rechargement grâce à `react-router-dom`.
+- **Responsive Design** : Interface adaptée aux mobiles, tablettes et bureaux.
+- **Thème sombre/clair** : Design moderne avec une palette de couleurs professionnelle.
 
-### Pour les fournisseurs :
-- Tableau de bord avec statistiques (revenus totaux, places vendues, taux d'occupation, clients actifs)
-- Consultation des factures
-- Statistiques de facturation
+### Pages et Composants
+- **Accueil** : Présentation générale avec profil et call-to-action.
+- **À propos** : Parcours académique et professionnel détaillé.
+- **Projets** : Galerie de projets avec liens vers GitHub et démos.
+- **Compétences** : Visualisation des compétences techniques (badges).
+- **CV** : Visualiseur PDF intégré et bouton de téléchargement.
+- **Contact** : 
+  - Formulaire de contact fonctionnel.
+  - Carte interactive (Leaflet) montrant la localisation.
+  - Mascotte animée réagissant aux actions de l'utilisateur.
 
 ## 🔧 Prérequis
 
-1. **.NET 8.0 SDK** 
-   - Télécharger : https://dotnet.microsoft.com/download/dotnet/8.0
-   - Vérifier : `dotnet --version`
+Avant de commencer, assurez-vous d'avoir installé :
 
-2. **MySQL Server 8.0 ou plus**
-   - Télécharger : https://dev.mysql.com/downloads/mysql/
-
-3. **Visual Studio 2022** ou **Visual Studio Code**
+- **Node.js** (v18.0.0 ou supérieur)
+- **npm** (v9.0.0 ou supérieur) ou **yarn**
 
 ## 📥 Installation
 
 ### Étape 1 : Cloner le projet
 
 ```bash
-git clone https://github.com/Seck2000/CineReserv.git
-cd CineReserv
+git clone https://github.com/Seck2000/Mon-Portfolio.git
+cd Mon-Portfolio
 ```
 
-### Étape 2 : Installer MySQL
-
-1. Télécharger et installer MySQL Server
-2. Noter le mot de passe root (nécessaire pour la suite)
-
-### Étape 3 : Créer la base de données
-
-1. Ouvrir **MySQL Command Line Client** ou **MySQL Workbench**
-
-2. Se connecter avec `root` et votre mot de passe
-
-3. Créer la base de données :
-   ```sql
-   CREATE DATABASE CineReservDB;
-   ```
-
-4. (Optionnel) Créer un utilisateur :
-   ```sql
-   CREATE USER 'cinereservuser'@'localhost' IDENTIFIED BY 'VotreMotDePasse123!';
-   GRANT ALL PRIVILEGES ON CineReservDB.* TO 'cinereservuser'@'localhost';
-   FLUSH PRIVILEGES;
-   ```
-
-### Étape 4 : Configurer la connexion
-
-Ouvrir `CineReserv/appsettings.json` et modifier :
-
-**Avec l'utilisateur root :**
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Database=CineReservDB;User=root;Password=VotreMotDePasseMySQL;"
-  }
-}
-```
-
-**Avec un utilisateur créé :**
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Database=CineReservDB;User=cinereservuser;Password=VotreMotDePasse123!;"
-  }
-}
-```
-
-> ⚠️ Remplacer `VotreMotDePasseMySQL` ou `VotreMotDePasse123!` par votre vrai mot de passe MySQL.
-
-### Étape 5 : Configurer Stripe (pour tester)
-
-1. Créer un compte sur https://dashboard.stripe.com/register (mode test)
-
-2. Récupérer les clés API :
-   - Clé publique : `pk_test_...`
-   - Clé secrète : `sk_test_...`
-
-3. Modifier `CineReserv/appsettings.json` :
-   ```json
-   {
-     "Stripe": {
-       "PublishableKey": "pk_test_votre_cle_publique",
-       "SecretKey": "sk_test_votre_cle_secrete"
-     }
-   }
-   ```
-
-   > 💡 Pour tester sans payer : utiliser la carte `4242 4242 4242 4242` (expiration future, CVC quelconque)
-
-### Étape 6 : Installer les packages
+### Étape 2 : Installer les dépendances
 
 ```bash
-cd CineReserv
-dotnet restore
+npm install
 ```
 
-## 🚀 Exécution
+### Étape 3 : Lancer le serveur de développement
 
-### Avec Visual Studio
+```bash
+npm run dev
+```
 
-1. Ouvrir `CineReserv.sln` dans Visual Studio 2022
-2. Appuyer sur **F5** pour démarrer
-3. La base de données sera créée automatiquement au premier lancement
-
-### Avec la ligne de commande
-
-1. Ouvrir un terminal dans le dossier `CineReserv`
-
-2. Créer la base de données :
-   ```bash
-   dotnet ef database update
-   ```
-   > Si la commande échoue, installer EF Core : `dotnet tool install --global dotnet-ef`
-
-3. Lancer l'application :
-   ```bash
-   dotnet run
-   ```
-
-4. Ouvrir le navigateur à l'URL affichée (généralement `https://localhost:5001`)
+L'application sera accessible à l'adresse `http://localhost:5173`.
 
 ## 📁 Structure du projet
 
 ```
-CineReserv/
-├── Controllers/          # Contrôleurs
-│   ├── AuthController.cs      # Inscription, connexion
-│   ├── FilmsController.cs    # Films et réservations
-│   ├── PanierController.cs    # Panier
-│   ├── PaymentController.cs  # Paiements Stripe
-│   ├── ReservationsController.cs  # Réservations
-│   ├── DashboardController.cs     # Tableau de bord fournisseur
-│   └── FacturationController.cs   # Factures fournisseur
-├── Models/               # Modèles de données
-│   ├── ApplicationUser.cs    # Utilisateur
-│   ├── Film.cs              # Film
-│   ├── Seance.cs            # Séance
-│   ├── Reservation.cs       # Réservation
-│   ├── Facture.cs           # Facture
-│   ├── Siege.cs             # Siège
-│   ├── Salle.cs             # Salle
-│   └── PanierItem.cs        # Article panier
-├── Views/                # Pages web
-├── Data/                 # Base de données
-│   └── ApplicationDbContext.cs
-├── Services/             # Services
-│   └── ApiService.cs     # Données initiales
-├── Program.cs            # Point d'entrée
-└── appsettings.json     # Configuration
+Mon-Portfolio/
+├── public/               # Fichiers statiques (images, CV, robots.txt)
+├── src/                  # Code source
+│   ├── assets/           # Ressources (images, icônes)
+│   ├── components/       # Composants réutilisables
+│   │   ├── Navbar.jsx    # Barre de navigation responsive
+│   │   ├── Footer.jsx    # Pied de page
+│   │   ├── SEO.jsx       # Gestion des méta-données (Head)
+│   │   └── ...
+│   ├── pages/            # Pages de l'application
+│   │   ├── Home.jsx      # Page d'accueil
+│   │   ├── About.jsx     # Page À propos
+│   │   ├── Projects.jsx  # Page Projets
+│   │   ├── Skills.jsx    # Page Compétences
+│   │   ├── CV.jsx        # Page CV (PDF viewer)
+│   │   └── Contact.jsx   # Page Contact (Formulaire + Map)
+│   ├── App.jsx           # Composant racine et routing
+│   ├── main.jsx          # Point d'entrée React
+│   └── index.css         # Styles globaux
+├── .npmrc                # Configuration NPM (legacy-peer-deps pour Vercel)
+├── index.html            # Point d'entrée HTML
+├── package.json          # Dépendances et scripts
+└── vite.config.js        # Configuration Vite
 ```
 
-## 🔍 Résolution de problèmes
+## 🚀 Déploiement
 
-### Erreur de connexion MySQL
+Le projet est configuré pour être déployé facilement sur **Vercel**.
 
-**Solution** :
-1. Vérifier que MySQL Server est démarré (Services Windows → MySQL80)
-2. Vérifier la chaîne de connexion dans `appsettings.json`
+1. Pousser le code sur GitHub.
+2. Connecter le dépôt à Vercel.
+3. Le déploiement se fait automatiquement à chaque push.
 
-### Migration échoue
-
-**Solution** :
-1. Installer les outils EF Core : `dotnet tool install --global dotnet-ef`
-2. Vérifier que la base de données existe : `CREATE DATABASE IF NOT EXISTS CineReservDB;`
-
-### Erreur Stripe
-
-**Solution** :
-1. Vérifier que les clés sont en mode test (`pk_test_...` et `sk_test_...`)
-2. Utiliser la carte de test : `4242 4242 4242 4242`
-
-## 📝 Notes
-
-- ⚠️ Ne pas commiter `appsettings.json` avec vos vraies clés API dans un dépôt public
-- 💡 En développement, utiliser des clés Stripe en mode test
-- 🔐 En production, utiliser des variables d'environnement pour les secrets
-
-## 📄 Licence
-
-Ce projet est sous licence MIT.
+> Un fichier `vercel.json` est inclus pour gérer la réécriture des URL (SPA routing).
 
 ## 👤 Auteur
 
-- GitHub : [@Seck2000](https://github.com/Seck2000)
+**Aissatou Seck**
+
+- **GitHub** : [@Seck2000](https://github.com/Seck2000)
+- **LinkedIn** : [Aissatou Seck](https://www.linkedin.com/in/aissatou-seck-70a550393)
+- **Email** : aminabalde200@gmail.com
